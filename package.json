@@ -18,8 +18,11 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.1.17",
     "@vueuse/core": "^14.1.0",
+    "mapbox-gl": "^3.17.0",
     "tailwindcss": "^4.1.17",
-    "vue": "^3.5.25"
+    "vue": "^3.5.25",
+    "vue-mapbox3": "^0.8.1",
+    "vue3-mapbox-gl": "^0.6.8"
   },
   "devDependencies": {
     "@tsconfig/node24": "^24.0.3",

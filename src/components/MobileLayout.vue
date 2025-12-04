@@ -1,20 +1,36 @@
 <!-- MobileLayout -->
+<script setup lang="ts">
+import OrderPanel from '@/components/OrderPanel.vue';
+import MapBox from '@/components/MapBox.vue';
+import { ref } from 'vue';
+
+const isOpen = ref(false);
+</script>
+
 <template>
-  <div class="fixed inset-0 flex flex-col bg-gray-50">
-    <!-- ========== Header ========== -->
-    <header class="p-8 border-b border-gray-200">
-      <h2 class="text-2xl text-center font-bold text-gray-900">xRouten</h2>
-    </header>
-    <!-- ========== Main ========== -->
-    <main class="flex-1 overflow-y-auto pb-16"></main>
-    <!-- Navigation -->
-    <footer class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
-      <div class="flex justify-around py-3 text-gray-600">
-        <button class="p-3 hover:bg-gray-100 rounded-lg transition">Bli</button>
-        <button class="p-3 hover:bg-gray-100 rounded-lg transition">Bla</button>
-        <button class="p-3 hover:bg-gray-100 rounded-lg transition">Blub</button>
-        <button class="p-3 hover:bg-gray-100 rounded-lg transition">Status</button>
+  <div class="fixed inset-0 bg-gray-200 flex flex-col">
+    <!-- Karte -->
+    <MapBox />
+
+    <!-- Header -->
+    <header
+      class="fixed left-1/2 -translate-x-1/2 z-20 flex items-center gap-4 select-none"
+    >
+      <div class="flex items-center justify-center gap-3 py-4 px-6">
+        <img
+          src="/logo_dark.png"
+          alt="xRouten"
+          class="h-10 w-10 object-contain"
+        />
+        <h1 class="text-2xl font-black text-gray-900 tracking-tight">
+          xRouten
+        </h1>
       </div>
-    </footer>
+    </header>
+
+    <!-- Panel unten -->
+    <aside class="fixed bottom-0 left-1/2 z-40 -translate-x-1/2 w-96">
+      <OrderPanel v-model="isOpen" />
+    </aside>
   </div>
 </template>
