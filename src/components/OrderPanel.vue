@@ -1,6 +1,6 @@
 <!-- OrderPanel -->
 <script setup lang="ts">
-const isOpen = defineModel<boolean>({ default: false });
+const isOpen = defineModel<boolean>();
 </script>
 
 <template>
@@ -49,12 +49,7 @@ const isOpen = defineModel<boolean>({ default: false });
         <p><span class="font-medium">Start:</span> xxx</p>
         <p><span class="font-medium">Ziel:</span> xxx</p>
         <p><span class="font-medium">Zwischenhalte:</span> xxx → xxx</p>
-        <p><span class="font-medium">Fahrer:</span> xxx</p>
-        <p><span class="font-medium">Geplante Ankunft:</span> xxx</p>
-        <p>
-          <span class="font-medium">Verspätung:</span>
-          <span class="font-medium"> xxx</span>
-        </p>
+        <p><span class="font-medium">Voraussichtliche Ankunft:</span> xxx</p>
       </div>
       <!-- Kontakt + Button -->
       <div

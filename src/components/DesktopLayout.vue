@@ -4,7 +4,7 @@ import OrderPanel from '@/components/OrderPanel.vue';
 import MapBox from '@/components/MapBox.vue';
 import { ref } from 'vue';
 
-const isOpen = ref(false);
+const isOpen = ref(true);
 </script>
 
 <template>
