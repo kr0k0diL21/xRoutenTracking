@@ -48,3 +48,6 @@ certs/
 
 # Vitest
 __screenshots__/
+
+# Gemini CLI Logs
+gemini.md
