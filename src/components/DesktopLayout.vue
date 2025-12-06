@@ -29,7 +29,7 @@ const isOpen = ref(true);
     </header>
 
     <!-- Panel links oben -->
-    <aside class="fixed top-40 left-4 w-96 z-40">
+    <aside class="fixed top-25 left-4 w-96 z-40">
       <OrderPanel v-model="isOpen" />
     </aside>
   </main>

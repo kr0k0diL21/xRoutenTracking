@@ -1,99 +1,130 @@
 <script setup lang="ts">
 import { onMounted, shallowRef } from 'vue';
-import mapboxgl from 'mapbox-gl';
+import mapboxgl, { LngLatBounds } from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
+// Mapbox Access Token
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
 const map = shallowRef<mapboxgl.Map | null>(null);
 
-// Punkte auf der Karte
-const start = { lng: 13.397634, lat: 52.52343, name: 'Alexanderplatz' };
-const ziel = { lng: 13.295779, lat: 52.520639, name: 'Schloss Charlottenburg' };
+// Koordinaten für Start und Ziel
+const start = { lng: 13.397634, lat: 52.52343 };
+const ziel = { lng: 13.295779, lat: 52.520639 };
 
-onMounted(async () => {
-  map.value = new mapboxgl.Map({
+// Funktion zur Erstellung des Marker-Elements
+function createMarkerElement(src: string, size: number) {
+  const el = document.createElement('img');
+  el.src = src;
+  el.style.width = `${size}px`;
+  el.style.height = `${size}px`;
+  return el;
+}
+
+onMounted(() => {
+  const mapInstance = new mapboxgl.Map({
     container: 'map',
     style: 'mapbox://styles/mapbox/standard',
     center: [13.36, 52.52],
-    zoom: 2,
+    zoom: 10,
   });
-  // 1. Zoom-in- und Zoom-out-Buttons hinzufügen (plus Kompass)
-  // NavigationControl: Fügt + / - Buttons und Kompass hinzu
-  map.value!.addControl(
-    new mapboxgl.NavigationControl({
-      showCompass: true, // Kompass anzeigen (optional: false zum Ausblenden)
-      showZoom: true, // Zoom-Buttons anzeigen (default: true)
-    }),
-    'top-right'
-  ); // Position: 'top-right' (andere Optionen: 'top-left', 'bottom-left', etc.)
 
-  // 2. Standard-Zentrierungsbutton hinzufügen (Geolocate: Zentriert auf Nutzer-Position)
-  // GeolocateControl: Button mit Ortungssymbol, der die Karte auf GPS-Position zentriert
-  map.value!.addControl(
+  map.value = mapInstance;
+
+  // Zusätzliche Steuerungen
+  mapInstance.addControl(
+    new mapboxgl.NavigationControl({ showCompass: true }),
+    'top-right'
+  );
+
+  mapInstance.addControl(
     new mapboxgl.GeolocateControl({
-      positionOptions: {
-        enableHighAccuracy: true, // Höhere Genauigkeit (optional)
-      },
-      trackUserLocation: true, // Kontinuierlich tracken (optional: false für einmalig)
-      fitBoundsOptions: {
-        maxZoom: 15, // Maximale Zoom-Stufe beim Zentrieren (verhindert zu starkes Zoomen)
-      },
+      positionOptions: { enableHighAccuracy: true },
+      trackUserLocation: true,
+      showUserLocation: true,
+      fitBoundsOptions: { maxZoom: 16 },
     }),
     'top-right'
-  ); // Position: 'top-left'
+  );
 
-  map.value.on('load', async () => {
-    // Marker setzen
-    new mapboxgl.Marker({ color: '#ef4444' })
+  // Hauptlogik mit async/await
+  mapInstance.on('load', async () => {
+    // Eigene Marker hinzufügen
+    new mapboxgl.Marker({
+      element: createMarkerElement('/start.png', 50),
+      anchor: 'bottom',
+    })
       .setLngLat([start.lng, start.lat])
-      .addTo(map.value!);
+      .addTo(mapInstance);
 
-    new mapboxgl.Marker({ color: '#3b82f6' })
+    new mapboxgl.Marker({
+      element: createMarkerElement('/ziel.png', 50),
+      anchor: 'bottom',
+    })
       .setLngLat([ziel.lng, ziel.lat])
-      .addTo(map.value!);
+      .addTo(mapInstance);
 
-    // === DIRECTIONS API ABRUFEN ===
-    const query = await fetch(
-      `https://api.mapbox.com/directions/v5/mapbox/driving/${start.lng},${start.lat};${ziel.lng},${ziel.lat}?geometries=geojson&access_token=${mapboxgl.accessToken}`
-      // driving → Auto
-      // walking → Fußgänger
-      // cycling → Fahrrad
-    );
-    const json = await query.json();
-    const route = json.routes[0].geometry; // GeoJSON der besten Route
+    // Route von Mapbox Directions API holen
+    const coordinates = `${start.lng},${start.lat};${ziel.lng},${ziel.lat}`;
+    const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${coordinates}?geometries=geojson&access_token=${mapboxgl.accessToken}`;
 
-    // === Route auf der Karte anzeigen ===
-    map.value!.addSource('route', {
-      type: 'geojson',
-      data: route,
-    });
+    try {
+      const response = await fetch(url);
 
-    map.value!.addLayer({
-      id: 'route',
-      type: 'line',
-      source: 'route',
-      layout: {
-        'line-join': 'round',
-        'line-cap': 'round',
-      },
-      paint: {
-        'line-color': '#3b82f6',
-        'line-width': 4,
-        'line-opacity': 0.9,
-      },
-    });
+      // Fehlerprüfung für HTTP-Status
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-    // === Karte auf die Route zoomen ===
-    const bounds = new mapboxgl.LngLatBounds();
-    route.coordinates.forEach((coord: [number, number]) =>
-      bounds.extend(coord)
-    );
+      const json = await response.json();
 
-    map.value!.fitBounds(bounds, {
-      padding: 100,
-      duration: 3000,
-    });
+      // Prüfung der Route
+      const routeGeometry = json.routes?.[0]?.geometry;
+
+      if (!routeGeometry) {
+        console.error('Keine Route gefunden oder Route-Daten sind leer.');
+        return;
+      }
+
+      // Route als Layer hinzufügen
+      mapInstance.addSource('route', {
+        type: 'geojson',
+        data: routeGeometry,
+      });
+
+      mapInstance.addLayer({
+        id: 'route',
+        type: 'line',
+        source: 'route',
+        layout: { 'line-join': 'round', 'line-cap': 'round' },
+        paint: {
+          'line-color': '#3b82f6',
+          'line-width': 5,
+          'line-opacity': 0.9,
+        },
+      });
+
+      // Karte auf die Route zoomen
+      const bounds = new LngLatBounds();
+
+      // Die Koordinaten sind vom Typ [number, number][]
+      (routeGeometry.coordinates as [number, number][]).forEach((coord) =>
+        bounds.extend(coord)
+      );
+
+      mapInstance.fitBounds(bounds, {
+        padding: {
+          top: 150,
+          bottom: 150,
+          left: 500,
+          right: 150,
+        },
+        duration: 2800,
+        maxZoom: 14,
+      });
+    } catch (err) {
+      console.error('Directions API Fehler:', err);
+    }
   });
 });
 </script>
