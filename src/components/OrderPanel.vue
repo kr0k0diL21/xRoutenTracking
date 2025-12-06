@@ -88,7 +88,7 @@ const timelineItems = ref([
         />
       </svg>
     </button>
-    <!-- Ausklappbares Inhalt -->
+    <!-- Ausklappbarer Inhalt -->
     <div
       class="grid transition-[grid-template-rows] duration-500 ease-in-out"
       :class="isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'"
@@ -101,7 +101,7 @@ const timelineItems = ref([
             <div class="relative py-2">
               <!-- Timeline Linie -->
               <div
-                class="absolute top-[10px] left-[10px] bottom-9 w-0.5 bg-gray-200"
+                class="absolute top-2.5 left-2.5 bottom-9 w-0.5 bg-gray-200"
               ></div>
 
               <!-- Timeline Items -->
@@ -113,7 +113,7 @@ const timelineItems = ref([
               >
                 <!-- Icon -->
                 <div
-                  class="absolute top-[3px] left-[10px] flex items-center justify-center -translate-x-1/2"
+                  class="absolute top-[3px] left-2.5 flex items-center justify-center -translate-x-1/2"
                 >
                   <!-- Fahrer Icon -->
                   <div

@@ -26,7 +26,7 @@ onMounted(() => {
     container: 'map',
     style: 'mapbox://styles/mapbox/standard',
     center: [13.36, 52.52],
-    zoom: 10,
+    zoom: 2,
   });
 
   map.value = mapInstance;
@@ -113,14 +113,9 @@ onMounted(() => {
       );
 
       mapInstance.fitBounds(bounds, {
-        padding: {
-          top: 150,
-          bottom: 150,
-          left: 500,
-          right: 150,
-        },
+        padding: { top: 50, bottom: 50, left: 80, right: 50 },
         duration: 2800,
-        maxZoom: 14,
+        maxZoom: 12,
       });
     } catch (err) {
       console.error('Directions API Fehler:', err);
