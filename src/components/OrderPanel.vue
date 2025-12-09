@@ -7,7 +7,7 @@ import ChevronUpDown from '@/assets/icons/ChevronUpDown.vue';
 
 const isOpen = defineModel<boolean>({ default: false });
 const status = ref(['Unterwegs', 'Erledigt']);
-const stopps = ref(2);
+const stopps = ref(1);
 const subtitleStopps = ref(['Auf dem Weg', 'Fast da']);
 
 const timelineItems = computed(() => {
@@ -89,7 +89,7 @@ const timelineItems = computed(() => {
         <div class="relative py-1">
           <!-- Timeline Linie -->
           <div
-            class="absolute top-2.5 left-2.5 bottom-9 w-0.5 bg-gray-200"
+            class="absolute top-2.5 left-[10px] bottom-9 w-0.5 bg-gray-200"
           ></div>
 
           <!-- Timeline Items -->
@@ -97,11 +97,11 @@ const timelineItems = computed(() => {
             v-for="(item, index) in timelineItems"
             :key="index"
             class="relative"
-            :class="{ 'mb-8': index < timelineItems.length - 1 }"
+            :class="{ 'mb-9': index < timelineItems.length - 1 }"
           >
             <!-- Icon -->
             <div
-              class="absolute top-[4px] left-[11px] flex items-center justify-center -translate-x-1/2"
+              class="absolute top-[4px] left-[11px] flex items-center justify-center -translate-x-1/2 -translate-y-1/7"
             >
               <!-- Fahrer Icon -->
               <div
@@ -125,7 +125,7 @@ const timelineItems = computed(() => {
               ></div>
             </div>
             <!-- Text -->
-            <div class="ml-8 mr-10">
+            <div class="ml-8">
               <p class="text-sm font-semibold text-gray-800">
                 {{ item.title }}
               </p>
