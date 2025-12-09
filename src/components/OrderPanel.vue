@@ -1,31 +1,44 @@
 <!-- OrderPanel -->
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+import ChevronRight from '@/assets/icons/ChevronRight.vue';
+import MapIcon from '@/assets/icons/MapIcon.vue';
+import ChevronUpDown from '@/assets/icons/ChevronUpDown.vue';
 
-const isOpen = defineModel<boolean>();
-
-const stopps = ref(1);
+const isOpen = defineModel<boolean>({ default: false });
+const status = ref(['Unterwegs', 'Erledigt']);
+const stopps = ref(2);
 const subtitleStopps = ref(['Auf dem Weg', 'Fast da']);
 
-const timelineItems = ref([
-  {
-    type: 'driver',
-    title: 'Fahrer Position',
-    subtitle: 'Musterstraße 123, 10115 Berlin',
-  },
-  {
-    type: 'stop',
-    title: 'Verbleibende Stopps: ' + stopps.value,
-    subtitle:
-      stopps.value > 1 ? subtitleStopps.value[0] : subtitleStopps.value[1],
-  },
-  {
+const timelineItems = computed(() => {
+  const items = [];
+
+  if (stopps.value > 0) {
+    items.push(
+      {
+        type: 'driver',
+        title: 'Fahrer',
+        subtitle: 'Musterstraße 123, 10115 Berlin',
+      },
+      {
+        type: 'stop',
+        title: 'Verbleibende Stopps: ' + stopps.value,
+        subtitle:
+          stopps.value > 1 ? subtitleStopps.value[0] : subtitleStopps.value[1],
+      }
+    );
+  }
+
+  items.push({
     type: 'destination',
     title: 'Ziel',
     subtitle: 'Beispielweg 456, 20457 Hamburg',
-    eta: 'Ankunft: ca. 14:30 Uhr',
-  },
-]);
+    eta: '14:30 Uhr',
+    status: stopps.value > 0 ? 'Ankunft ca. ' : 'Abgeschlossen um ',
+  });
+
+  return items;
+});
 </script>
 
 <template>
@@ -42,44 +55,26 @@ const timelineItems = ref([
       </div>
       <div class="text-sm text-gray-600 mt-1 flex items-center gap-2">
         <span class="truncate">Fahrer Position</span>
-        <svg
-          class="w-3 h-3 text-gray-400 shrink-0"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M14 5l7 7-7 7"
-          />
-        </svg>
+        <ChevronRight />
         <span class="truncate">Hamburg</span>
       </div>
     </div>
 
     <div
-      class="inline-flex items-center rounded-full bg-green-100 mb-5 px-3.5 py-1.5 text-xs font-bold text-green-800 ring-1 ring-green-200"
+      class="inline-flex items-center rounded-full mb-5 px-3.5 py-1.5 text-xs font-bold ring-1"
+      :class="
+        stopps <= 0
+          ? 'bg-green-100 text-green-800 ring-green-200'
+          : 'bg-blue-100 text-blue-800 ring-blue-200'
+      "
     >
-      <span class="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
-      Unterwegs
+      <span
+        class="w-2 h-2 rounded-full mr-2 animate-pulse"
+        :class="stopps <= 0 ? 'bg-green-500' : 'bg-blue-500'"
+      ></span>
+      {{ stopps <= 0 ? status[1] : status[0] }}
     </div>
-
-    <svg
-      class="w-8 h-8 text-gray-500 transition-transform duration-0 shrink-0 mb-5"
-      :class="{ 'rotate-180': isOpen }"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="2"
-        d="M19 9l-7 7-7-7"
-      />
-    </svg>
+    <ChevronUpDown :isOpen="isOpen" />
   </button>
   <!-- Ausklappbarer Inhalt -->
   <div
@@ -89,81 +84,67 @@ const timelineItems = ref([
     <div class="overflow-hidden">
       <!-- Mittlerer Inhalt -->
       <div class="mx-6 py-6 border-t border-b border-orange-500/10">
-        <div class="relative">
-          <!-- Schlichte Timeline -->
-          <div class="relative py-1 border">
-            <!-- Timeline Linie -->
-            <div
-              class="border absolute top-2.5 left-2.5 bottom-9 w-0.5 bg-gray-200"
-            ></div>
+        <!-- Schlichte Timeline -->
+        <div class="relative py-1">
+          <!-- Timeline Linie -->
+          <div
+            class="absolute top-2.5 left-2.5 bottom-9 w-0.5 bg-gray-200"
+          ></div>
 
-            <!-- Timeline Items -->
+          <!-- Timeline Items -->
+          <div
+            v-for="(item, index) in timelineItems"
+            :key="index"
+            class="relative"
+            :class="{ 'mb-8': index < timelineItems.length - 1 }"
+          >
+            <!-- Icon -->
             <div
-              v-for="(item, index) in timelineItems"
-              :key="index"
-              class="relative border"
-              :class="{ 'mb-8': index < timelineItems.length - 1 }"
+              class="absolute top-[4px] left-[11px] flex items-center justify-center -translate-x-1/2"
             >
-              <!-- Icon -->
+              <!-- Fahrer Icon -->
               <div
-                class="absolute top-[3px] left-2.5 flex items-center justify-center -translate-x-1/2"
-              >
-                <!-- Fahrer Icon -->
-                <div
-                  v-if="item.type === 'driver'"
-                  class="w-5 h-5 rounded-full bg-orange-500 ring-4 ring-white"
-                ></div>
-                <!-- Ziel Icon -->
-                <div
-                  v-else-if="item.type === 'destination'"
-                  class="w-5 h-5 rounded-full bg-white ring-4 ring-gray-300"
-                ></div>
-                <!-- Zwischenstopp Icon -->
-                <div
-                  v-else
-                  class="w-3 h-3 rounded-full bg-gray-400 ring-2 ring-white"
-                ></div>
-              </div>
-              <!-- Text -->
-              <div class="ml-8 mr-10">
-                <p class="text-sm font-semibold text-gray-800">
-                  {{ item.title }}
-                </p>
-                <p class="text-xs text-gray-500">{{ item.subtitle }}</p>
-                <p
-                  v-if="item.eta"
-                  class="text-xs text-orange-600 font-semibold mt-1"
-                >
-                  {{ item.eta }}
-                </p>
-              </div>
-
-              <!-- Center Button -->
-              <button
-                v-if="item.type === 'driver' || item.type === 'destination'"
-                class="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-orange-500 transition-colors p-2 -mr-2"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="w-8 h-8"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                  />
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
-              </button>
+                v-if="item.type === 'driver'"
+                class="w-5 h-5 rounded-full bg-orange-500 ring-4 ring-white"
+              ></div>
+              <!-- Ziel Icon -->
+              <div
+                v-else-if="item.type === 'destination'"
+                class="w-5 h-5 rounded-full ring-4"
+                :class="
+                  stopps <= 0
+                    ? 'bg-orange-500 ring-white'
+                    : 'bg-white ring-gray-300'
+                "
+              ></div>
+              <!-- Zwischenstopp Icon -->
+              <div
+                v-else
+                class="w-3 h-3 rounded-full bg-orange-500 ring-4 ring-white"
+              ></div>
             </div>
+            <!-- Text -->
+            <div class="ml-8 mr-10">
+              <p class="text-sm font-semibold text-gray-800">
+                {{ item.title }}
+              </p>
+              <p class="text-xs text-gray-500">{{ item.subtitle }}</p>
+              <p
+                v-if="item.eta"
+                class="text-xs font-semibold mt-1"
+                :class="stopps <= 0 ? 'text-green-800' : 'text-blue-800'"
+              >
+                {{ item.status + item.eta }}
+              </p>
+            </div>
+
+            <!-- Center Button -->
+            <button
+              v-if="item.type === 'driver' || item.type === 'destination'"
+              class="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-orange-500 transition-colors p-2 -mr-2"
+            >
+              <MapIcon />
+            </button>
           </div>
         </div>
       </div>
