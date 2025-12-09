@@ -29,7 +29,9 @@ const isOpen = ref(true);
     </header>
 
     <!-- Panel links oben -->
-    <aside class="fixed top-25 left-4 w-96 z-40">
+    <aside
+      class="fixed top-25 left-4 z-40 bg-white/70 backdrop-blur rounded-3xl shadow-2xl border border-orange-500/30 overflow-hidden max-w-sm w-full transform transition-all duration-300 hover:shadow-3xl"
+    >
       <OrderPanel v-model="isOpen" />
     </aside>
   </main>

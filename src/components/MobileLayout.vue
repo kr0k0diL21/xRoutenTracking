@@ -8,7 +8,7 @@ const isOpen = ref(false);
 </script>
 
 <template>
-  <div class="fixed inset-0 bg-gray-200 flex flex-col">
+  <main class="fixed inset-0 bg-gray-200 flex flex-col">
     <!-- Karte -->
     <MapBox />
 
@@ -29,8 +29,10 @@ const isOpen = ref(false);
     </header>
 
     <!-- Panel unten -->
-    <aside class="fixed bottom-0 left-1/2 -translate-x-1/2 w-96 z-40">
+    <aside
+      class="fixed bottom-0 left-1/2 -translate-x-1/2 z-40 bg-white/70 backdrop-blur rounded-3xl shadow-2xl border border-orange-500/30 overflow-hidden max-w-sm w-full transform transition-all duration-300 hover:shadow-3xl"
+    >
       <OrderPanel v-model="isOpen" />
     </aside>
-  </div>
+  </main>
 </template>
