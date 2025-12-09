@@ -1,3 +1,4 @@
+<!--MapBox-->
 <script setup lang="ts">
 import { onMounted, shallowRef } from 'vue';
 import mapboxgl, { LngLatBounds } from 'mapbox-gl';
@@ -49,21 +50,6 @@ onMounted(() => {
 
   // Hauptlogik mit async/await
   mapInstance.on('load', async () => {
-    // Eigene Marker hinzufügen
-    new mapboxgl.Marker({
-      element: createMarkerElement('/start.png', 50),
-      anchor: 'bottom',
-    })
-      .setLngLat([start.lng, start.lat])
-      .addTo(mapInstance);
-
-    new mapboxgl.Marker({
-      element: createMarkerElement('/ziel.png', 50),
-      anchor: 'bottom',
-    })
-      .setLngLat([ziel.lng, ziel.lat])
-      .addTo(mapInstance);
-
     // Route von Mapbox Directions API holen
     const coordinates = `${start.lng},${start.lat};${ziel.lng},${ziel.lat}`;
     const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${coordinates}?geometries=geojson&access_token=${mapboxgl.accessToken}`;
@@ -104,6 +90,21 @@ onMounted(() => {
         },
       });
 
+      // Eigene Marker hinzufügen mit den tatsächlichen Straßen Koordinaten
+      const waypoints = json.waypoints;
+      new mapboxgl.Marker({
+        element: createMarkerElement('/start.png', 50),
+        anchor: 'center',
+      })
+        .setLngLat([waypoints[0].location[0], waypoints[0].location[1]])
+        .addTo(mapInstance);
+
+      new mapboxgl.Marker({
+        element: createMarkerElement('/ziel.png', 50),
+        anchor: 'center',
+      })
+        .setLngLat([waypoints[1].location[0], waypoints[1].location[1]])
+        .addTo(mapInstance);
       // Karte auf die Route zoomen
       const bounds = new LngLatBounds();
 

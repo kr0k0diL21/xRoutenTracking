@@ -35,6 +35,7 @@ const timelineItems = computed(() => {
     subtitle: 'Beispielweg 456, 20457 Hamburg',
     eta: '14:30 Uhr',
     status: stopps.value > 0 ? 'Ankunft ca. ' : 'Abgeschlossen um ',
+    coords: { lng: 9.9844, lat: 53.5413 },
   });
 
   return items;
