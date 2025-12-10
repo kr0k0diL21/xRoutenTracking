@@ -7,7 +7,7 @@ import ChevronUpDown from '@/assets/icons/ChevronUpDown.vue';
 
 const isOpen = defineModel<boolean>({ default: false });
 const status = ref(['Unterwegs', 'Erledigt']);
-const stopps = ref(1);
+const stopps = ref(0);
 const subtitleStopps = ref(['Auf dem Weg', 'Fast da']);
 
 const timelineItems = computed(() => {
