@@ -7,7 +7,7 @@ import ChevronUpDown from '@/assets/icons/ChevronUpDown.vue';
 
 const isOpen = defineModel<boolean>({ default: false });
 const status = ref(['Unterwegs', 'Erledigt']);
-const stopps = ref(1);
+const stopps = ref(0);
 const subtitleStopps = ref(['Auf dem Weg', 'Fast da']);
 
 const timelineItems = computed(() => {
@@ -35,7 +35,6 @@ const timelineItems = computed(() => {
     subtitle: 'Beispielweg 456, 20457 Hamburg',
     eta: '14:30 Uhr',
     status: stopps.value > 0 ? 'Ankunft ca. ' : 'Abgeschlossen um ',
-    coords: { lng: 9.9844, lat: 53.5413 },
   });
 
   return items;
@@ -45,7 +44,11 @@ const timelineItems = computed(() => {
 <template>
   <!-- Header -->
   <button
-    @click="isOpen = !isOpen"
+    @click="
+      () => {
+        isOpen = !isOpen;
+      }
+    "
     class="w-full p-6 text-left flex items-center gap-4 hover:bg-orange-50/50 transition-colors"
   >
     <div class="flex-1 min-w-0">
@@ -75,7 +78,7 @@ const timelineItems = computed(() => {
       ></span>
       {{ stopps <= 0 ? status[1] : status[0] }}
     </div>
-    <ChevronUpDown :isOpen="isOpen" />
+    <ChevronUpDown :is-open="isOpen" />
   </button>
   <!-- Ausklappbarer Inhalt -->
   <div

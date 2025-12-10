@@ -10,8 +10,8 @@ mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 const map = shallowRef<mapboxgl.Map | null>(null);
 
 // Koordinaten für Start und Ziel
-const start = { lng: 13.397634, lat: 52.52343 };
-const ziel = { lng: 13.295779, lat: 52.520639 };
+const driver = { lng: 13.397634, lat: 52.52343 };
+const destination = { lng: 13.295779, lat: 52.520639 };
 
 // Funktion zur Erstellung des Marker-Elements
 function createMarkerElement(src: string, size: number) {
@@ -51,7 +51,7 @@ onMounted(() => {
   // Hauptlogik mit async/await
   mapInstance.on('load', async () => {
     // Route von Mapbox Directions API holen
-    const coordinates = `${start.lng},${start.lat};${ziel.lng},${ziel.lat}`;
+    const coordinates = `${driver.lng},${driver.lat};${destination.lng},${destination.lat}`;
     const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${coordinates}?geometries=geojson&access_token=${mapboxgl.accessToken}`;
 
     try {
@@ -90,6 +90,21 @@ onMounted(() => {
         },
       });
 
+      // Karte auf die Route zoomen
+      const bounds = new LngLatBounds();
+      const coordinatesArray: [number, number][] =
+        routeGeometry.coordinates as [number, number][];
+
+      for (const coord of coordinatesArray) {
+        bounds.extend(coord);
+      }
+
+      mapInstance.fitBounds(bounds, {
+        padding: { top: 50, bottom: 50, left: 80, right: 50 },
+        duration: 2800,
+        maxZoom: 12,
+      });
+
       // Eigene Marker hinzufügen mit den tatsächlichen Straßen Koordinaten
       const waypoints = json.waypoints;
       new mapboxgl.Marker({
@@ -105,19 +120,6 @@ onMounted(() => {
       })
         .setLngLat([waypoints[1].location[0], waypoints[1].location[1]])
         .addTo(mapInstance);
-      // Karte auf die Route zoomen
-      const bounds = new LngLatBounds();
-
-      // Die Koordinaten sind vom Typ [number, number][]
-      (routeGeometry.coordinates as [number, number][]).forEach((coord) =>
-        bounds.extend(coord)
-      );
-
-      mapInstance.fitBounds(bounds, {
-        padding: { top: 50, bottom: 50, left: 80, right: 50 },
-        duration: 2800,
-        maxZoom: 12,
-      });
     } catch (err) {
       console.error('Directions API Fehler:', err);
     }

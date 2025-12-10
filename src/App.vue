@@ -1,27 +1,21 @@
 <!-- App.vue -->
 <script setup lang="ts">
 import { useBreakpoints, breakpointsTailwind } from '@vueuse/core';
-const breakpoints = useBreakpoints(breakpointsTailwind);
-const isMobile = breakpoints.smaller('md');
 import OrderPanel from '@/components/OrderPanel.vue';
 import MapBox from '@/components/MapBox.vue';
 import { ref, watch } from 'vue';
 
-const isOpen = ref(false);
-watch(
-  isMobile,
-  (value: boolean) => {
-    isOpen.value = !value;
-  },
-  { immediate: true }
-);
+const breakpoints = useBreakpoints(breakpointsTailwind);
+const isMobile = breakpoints.smaller('md');
+const isOpen = ref(!isMobile.value);
+
+watch(isMobile, (value: boolean) => (isOpen.value = value ? false : true));
 </script>
 
 <template>
   <main class="fixed inset-0 bg-gray-200 flex flex-col">
     <!-- Karte -->
     <MapBox />
-
     <!-- Header -->
     <header
       class="fixed left-1/2 -translate-x-1/2 z-20 flex items-center gap-4 select-none"
@@ -30,7 +24,7 @@ watch(
         <img
           src="/logo_dark.png"
           alt="xRouten"
-          class="h-10 w-10 object-contain"
+          class="size-10 object-contain"
         />
         <h1 class="text-2xl font-black text-gray-900 tracking-tight">
           xRouten
