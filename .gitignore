@@ -42,6 +42,20 @@ dev-cert.*
 ssl/
 certs/
 
+# Local HTTPS development certificates
+localhost.key
+localhost.crt
+localhost.pem
+localhost-key.pem
+*.pem
+*.key
+*.crt
+
+# Falls du mal andere Namen verwendest:
+dev-cert.*
+ssl/
+certs/
+
 # Cypress
 /cypress/videos/
 /cypress/screenshots/
