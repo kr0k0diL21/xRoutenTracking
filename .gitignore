@@ -51,3 +51,6 @@ __screenshots__/
 
 # Gemini CLI Logs
 gemini.md
+*.pem
+*.key
+localhost*
