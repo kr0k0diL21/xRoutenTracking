@@ -1,5 +1,6 @@
 // src/composables/useTrackingData.ts
 import { ref, computed } from 'vue';
+import { useMapRoute } from './useMapRoute';
 
 export interface Location {
   lng: number;
@@ -28,7 +29,7 @@ const driverData = ref<DriverData>({
   driver: {
     name: 'John Doe',
     phone: '+49 123 456789',
-    address: 'Irgendwo berechnet durch API',
+    address: 'Lade Adresse...',
     location: { lng: 13.397634, lat: 52.52343 },
   },
   remainingStops: [
@@ -38,7 +39,7 @@ const driverData = ref<DriverData>({
     { lng: 13.342533, lat: 52.513364 },
   ],
   destination: {
-    address: 'Irgendwas berechnet durch API',
+    address: 'Lade Adresse...',
     location: { lng: 13.295779, lat: 52.520639 },
     eta: '14:30 Uhr',
   },
@@ -46,9 +47,18 @@ const driverData = ref<DriverData>({
 
 export function useTrackingData() {
   const stopps = computed(() => driverData.value.remainingStops.length);
-
+  const { getAddressFromCoords } = useMapRoute();
+  const updateAddressFromCoords = async () => {
+    driverData.value.driver.address = await getAddressFromCoords(
+      driverData.value.driver.location
+    );
+    driverData.value.destination.address = await getAddressFromCoords(
+      driverData.value.destination.location
+    );
+  };
   return {
     driverData,
     stopps,
+    updateAddressFromCoords,
   };
 }

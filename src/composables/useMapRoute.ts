@@ -164,10 +164,25 @@ export function useMapRoute() {
       });
     }
   }
+  async function getAddressFromCoords(location: Location): Promise<string> {
+  const url = `https://api.mapbox.com/search/geocode/v6/reverse?longitude=${location.lng}&latitude=${location.lat}&access_token=${mapboxgl.accessToken}`;
+
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+
+    // Mapbox v6 liefert die Adresse in 'features[0].properties.full_address'
+    return data.features?.[0]?.properties?.full_address || 'Adresse nicht gefunden';
+  } catch (error) {
+    console.error("Geocoding Fehler:", error);
+    return "Fehler bei der Adresssuche";
+  }
+}
 
   return {
     map,
     setupMapWithRoute,
     centerOnPoint,
+    getAddressFromCoords
   };
 }
