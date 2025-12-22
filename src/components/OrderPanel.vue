@@ -1,14 +1,18 @@
 <!-- OrderPanel -->
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { computed } from 'vue';
 import ChevronRight from '@/assets/icons/ChevronRight.vue';
 import MapIcon from '@/assets/icons/MapIcon.vue';
 import ChevronUpDown from '@/assets/icons/ChevronUpDown.vue';
+import { useTrackingData } from '@/composables/useTrackingData';
+import { useMapRoute } from '@/composables/useMapRoute';
+
+const { stopps, driverData } = useTrackingData();
+const { centerOnPoint } = useMapRoute();
 
 const isOpen = defineModel<boolean>({ default: false });
-const status = ref(['Unterwegs', 'Erledigt']);
-const stopps = ref(1);
-const subtitleStopps = ref(['Auf dem Weg', 'Fast da']);
+const status = ['Unterwegs', 'Erledigt'];
+const subtitleStopps = ['Auf dem Weg', 'Fast da'];
 
 const timelineItems = computed(() => {
   const items = [];
@@ -17,14 +21,13 @@ const timelineItems = computed(() => {
     items.push(
       {
         type: 'driver',
-        title: 'Fahrer',
-        subtitle: 'Musterstraße 123, 10115 Berlin',
+        title: driverData.value.driver.name,
+        subtitle: driverData.value.driver.address,
       },
       {
         type: 'stop',
         title: 'Verbleibende Stopps: ' + stopps.value,
-        subtitle:
-          stopps.value > 1 ? subtitleStopps.value[0] : subtitleStopps.value[1],
+        subtitle: stopps.value > 1 ? subtitleStopps[0] : subtitleStopps[1],
       }
     );
   }
@@ -32,14 +35,20 @@ const timelineItems = computed(() => {
   items.push({
     type: 'destination',
     title: 'Ziel',
-    subtitle: 'Beispielweg 456, 20457 Hamburg',
-    eta: '14:30 Uhr',
+    subtitle: driverData.value.destination.address,
+    eta: driverData.value.destination.eta,
     status: stopps.value > 0 ? 'Ankunft ca. ' : 'Abgeschlossen um ',
-    coords: { lng: 9.9844, lat: 53.5413 },
   });
 
   return items;
 });
+const handleCenterMap = (type: string) => {
+  if (type === 'driver') {
+    centerOnPoint(driverData.value.driver.location);
+  } else if (type === 'destination') {
+    centerOnPoint(driverData.value.destination.location);
+  }
+};
 </script>
 
 <template>
@@ -52,12 +61,12 @@ const timelineItems = computed(() => {
       <div
         class="text-xl font-bold text-gray-900 tracking-tight wrap-break-word"
       >
-        SH-2025-00421
+        {{ driverData.orderId }}
       </div>
       <div class="text-sm text-gray-600 mt-1 flex items-center gap-2">
-        <span class="truncate">Fahrer Position</span>
+        <span class="truncate">{{ driverData.driver.address }}</span>
         <ChevronRight />
-        <span class="truncate">Hamburg</span>
+        <span class="truncate">{{ driverData.destination.address }}</span>
       </div>
     </div>
 
@@ -89,7 +98,7 @@ const timelineItems = computed(() => {
         <div class="relative py-1">
           <!-- Timeline Linie -->
           <div
-            class="absolute top-2.5 left-[10px] bottom-9 w-0.5 bg-gray-200"
+            class="absolute top-2.5 left-2.5 bottom-9 w-0.5 bg-gray-200"
           ></div>
 
           <!-- Timeline Items -->
@@ -101,7 +110,7 @@ const timelineItems = computed(() => {
           >
             <!-- Icon -->
             <div
-              class="absolute top-[4px] left-[11px] flex items-center justify-center -translate-x-1/2 -translate-y-1/7"
+              class="absolute top-1 left-[11px] flex items-center justify-center -translate-x-1/2 -translate-y-1/7"
             >
               <!-- Fahrer Icon -->
               <div
@@ -142,6 +151,7 @@ const timelineItems = computed(() => {
             <!-- Center Button -->
             <button
               v-if="item.type === 'driver' || item.type === 'destination'"
+              @click.stop="handleCenterMap(item.type)"
               class="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-orange-500 transition-colors p-2 -mr-2"
             >
               <MapIcon />
@@ -152,8 +162,13 @@ const timelineItems = computed(() => {
       <!-- Footer Fahrerkontakt -->
       <div class="m-7 flex justify-between items-center text-left">
         <div class="text-sm text-gray-600">
-          <p><span class="font-medium">Fahrer:</span> xxx</p>
-          <p class="text-xs text-gray-500 mt-1">Tel: xxx</p>
+          <p>
+            <span class="font-medium">Fahrer:</span>
+            {{ driverData.driver.name }}
+          </p>
+          <p class="text-xs text-gray-500 mt-1">
+            {{ driverData.driver.phone }}
+          </p>
         </div>
         <button
           class="bg-orange-500 text-white px-5 py-2 rounded-lg hover:bg-orange-600 transition text-sm font-medium"
