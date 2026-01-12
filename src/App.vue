@@ -3,17 +3,10 @@
 import { useBreakpoints, breakpointsTailwind } from '@vueuse/core';
 import OrderPanel from '@/components/OrderPanel.vue';
 import MapBox from '@/components/MapBox.vue';
-import { ref, watch, onMounted } from 'vue';
-import { useTrackingData } from './composables/useTrackingData';
+import { ref, watch } from 'vue';
 
 const breakpoints = useBreakpoints(breakpointsTailwind);
 const isMobile = breakpoints.smaller('md');
-const { updateAddressFromCoords } = useTrackingData();
-
-// Adressen beim Laden der Seite abrufen
-onMounted(async () => {
-  await updateAddressFromCoords();
-});
 
 const isOpen = ref(false);
 watch(

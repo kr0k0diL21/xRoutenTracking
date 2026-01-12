@@ -1,61 +1,21 @@
 <!-- OrderPanel -->
 <script setup lang="ts">
-import { computed } from 'vue';
-import ChevronRight from '@/assets/icons/ChevronRight.vue';
 import MapIcon from '@/assets/icons/MapIcon.vue';
+import ChevronRight from '@/assets/icons/ChevronRight.vue';
 import ChevronUpDown from '@/assets/icons/ChevronUpDown.vue';
 import { useTrackingData } from '@/composables/useTrackingData';
-import { useMapRoute } from '@/composables/useMapRoute';
-
-const { stopps, driverData } = useTrackingData();
-const { centerOnPoint } = useMapRoute();
 
 const isOpen = defineModel<boolean>({ default: false });
-const status = ['Unterwegs', 'Erledigt'];
-const subtitleStopps = ['Auf dem Weg', 'Fast da'];
-
-const timelineItems = computed(() => {
-  const items = [];
-
-  if (stopps.value > 0) {
-    items.push(
-      {
-        type: 'driver',
-        title: driverData.value.driver.name,
-        subtitle: driverData.value.driver.address,
-      },
-      {
-        type: 'stop',
-        title: 'Verbleibende Stopps: ' + stopps.value,
-        subtitle: stopps.value > 1 ? subtitleStopps[0] : subtitleStopps[1],
-      }
-    );
-  }
-
-  items.push({
-    type: 'destination',
-    title: 'Ziel',
-    subtitle: driverData.value.destination.address,
-    eta: driverData.value.destination.eta,
-    status: stopps.value > 0 ? 'Ankunft ca. ' : 'Abgeschlossen um ',
-  });
-
-  return items;
-});
-const handleCenterMap = (type: string) => {
-  if (type === 'driver') {
-    centerOnPoint(driverData.value.driver.location);
-  } else if (type === 'destination') {
-    centerOnPoint(driverData.value.destination.location);
-  }
-};
+const isMobile = window.innerWidth < 768;
+const { driverData, timelineItems, handleCenterMap } = useTrackingData();
 </script>
 
 <template>
   <!-- Header -->
   <button
     @click="isOpen = !isOpen"
-    class="w-full p-6 text-left flex items-center gap-4 hover:bg-orange-50/50 transition-colors"
+    class="w-full p-6 text-left flex items-center gap-4 transition-colors"
+    :class="isMobile ? '' : 'hover:bg-orange-50/50'"
   >
     <div class="flex-1 min-w-0">
       <div
@@ -64,8 +24,10 @@ const handleCenterMap = (type: string) => {
         {{ driverData.orderId }}
       </div>
       <div class="text-sm text-gray-600 mt-1 flex items-center gap-2">
-        <span class="truncate">{{ driverData.driver.address }}</span>
-        <ChevronRight />
+        <template v-if="!driverData.isDelivered">
+          <span class="truncate">{{ driverData.driver.address }}</span>
+          <ChevronRight />
+        </template>
         <span class="truncate">{{ driverData.destination.address }}</span>
       </div>
     </div>
@@ -73,16 +35,16 @@ const handleCenterMap = (type: string) => {
     <div
       class="inline-flex items-center rounded-full mb-5 px-3.5 py-1.5 text-xs font-bold ring-1"
       :class="
-        stopps <= 0
+        driverData.isDelivered
           ? 'bg-green-100 text-green-800 ring-green-200'
           : 'bg-blue-100 text-blue-800 ring-blue-200'
       "
     >
       <span
         class="w-2 h-2 rounded-full mr-2 animate-pulse"
-        :class="stopps <= 0 ? 'bg-green-500' : 'bg-blue-500'"
+        :class="driverData.isDelivered ? 'bg-green-500' : ' bg-blue-500'"
       ></span>
-      {{ stopps <= 0 ? status[1] : status[0] }}
+      {{ driverData.isDelivered ? 'Erledigt' : 'Unterwegs' }}
     </div>
     <ChevronUpDown :isOpen="isOpen" />
   </button>
@@ -122,7 +84,7 @@ const handleCenterMap = (type: string) => {
                 v-else-if="item.type === 'destination'"
                 class="w-5 h-5 rounded-full ring-4"
                 :class="
-                  stopps <= 0
+                  driverData.isDelivered
                     ? 'bg-orange-500 ring-white'
                     : 'bg-white ring-gray-300'
                 "
@@ -142,7 +104,9 @@ const handleCenterMap = (type: string) => {
               <p
                 v-if="item.eta"
                 class="text-xs font-semibold mt-1"
-                :class="stopps <= 0 ? 'text-green-800' : 'text-blue-800'"
+                :class="
+                  driverData.isDelivered ? 'text-green-800' : 'text-blue-800'
+                "
               >
                 {{ item.status + item.eta }}
               </p>
@@ -163,11 +127,7 @@ const handleCenterMap = (type: string) => {
       <div class="m-7 flex justify-between items-center text-left">
         <div class="text-sm text-gray-600">
           <p>
-            <span class="font-medium">Fahrer:</span>
-            {{ driverData.driver.name }}
-          </p>
-          <p class="text-xs text-gray-500 mt-1">
-            {{ driverData.driver.phone }}
+            <span class="font-medium">Fragen?</span>
           </p>
         </div>
         <button
