@@ -55,7 +55,7 @@ const handleCenterMap = (type: string) => {
   <!-- Header -->
   <button
     @click="isOpen = !isOpen"
-    class="w-full p-6 text-left flex items-center gap-4 hover:bg-orange-50/50 transition-colors"
+    class="w-full p-6 text-left flex items-center gap-4"
   >
     <div class="flex-1 min-w-0">
       <div

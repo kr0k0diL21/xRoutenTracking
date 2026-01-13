@@ -153,36 +153,38 @@ export function useMapRoute() {
       }
     });
   }
-
+  // Zentrierfunktion
   function centerOnPoint(location: Location) {
     if (map.value) {
       map.value.flyTo({
         center: [location.lng, location.lat],
-        zoom: 14, // Standard-Zoom-Level für die Detailansicht
-        duration: 2000, // Dauer der Animation in ms
-        essential: true, // Markiert die Animation als essentiell
+        zoom: 14,
+        duration: 2000,
+        essential: true,
       });
     }
   }
+  // Geocoding
   async function getAddressFromCoords(location: Location): Promise<string> {
-  const url = `https://api.mapbox.com/search/geocode/v6/reverse?longitude=${location.lng}&latitude=${location.lat}&access_token=${mapboxgl.accessToken}`;
+    const url = `https://api.mapbox.com/search/geocode/v6/reverse?longitude=${location.lng}&latitude=${location.lat}&access_token=${mapboxgl.accessToken}`;
 
-  try {
-    const response = await fetch(url);
-    const data = await response.json();
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
 
-    // Mapbox v6 liefert die Adresse in 'features[0].properties.full_address'
-    return data.features?.[0]?.properties?.full_address || 'Adresse nicht gefunden';
-  } catch (error) {
-    console.error("Geocoding Fehler:", error);
-    return "Fehler bei der Adresssuche";
+      return (
+        data.features?.[0]?.properties?.full_address || 'Adresse nicht gefunden'
+      );
+    } catch (error) {
+      console.error('Geocoding Fehler:', error);
+      return 'Fehler bei der Adresssuche';
+    }
   }
-}
 
   return {
     map,
     setupMapWithRoute,
     centerOnPoint,
-    getAddressFromCoords
+    getAddressFromCoords,
   };
 }
