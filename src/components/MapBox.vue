@@ -5,14 +5,18 @@ import { useMapRoute } from '@/composables/useMapRoute';
 import { useTrackingData } from '@/composables/useTrackingData';
 
 const { setupMapWithRoute, updateRouteAndMarker } = useMapRoute();
-const { driverData, updateAddressFromCoords } = useTrackingData();
-const driverLocation = driverData.value.driver.location;
-const destinationLocation = driverData.value.destination.location;
-const isDelivered = driverData.value.isDelivered;
+const { driverData, updateAddressFromCoords, fetchXroutenStatus ,startTracking} =
+  useTrackingData();
 
 onMounted(async () => {
-  setupMapWithRoute(driverLocation, destinationLocation, isDelivered);
+  await fetchXroutenStatus();
+  startTracking();
   await updateAddressFromCoords();
+  setupMapWithRoute(
+    driverData.value.driver.location,
+    driverData.value.destination.location,
+    driverData.value.isDelivered
+  );
 });
 
 watch(
@@ -20,7 +24,10 @@ watch(
   async () => {
     if (driverData.value.isDelivered) return;
     const newLocation = driverData.value.driver.location;
-    await updateRouteAndMarker(newLocation, destinationLocation);
+    await updateRouteAndMarker(
+      newLocation,
+      driverData.value.destination.location
+    );
     await updateAddressFromCoords();
   },
   { deep: true }

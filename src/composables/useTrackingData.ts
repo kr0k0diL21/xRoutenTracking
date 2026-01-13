@@ -1,9 +1,9 @@
 // src/composables/useTrackingData.ts
-import { ref, computed } from 'vue';
+import { ref, computed, onUnmounted } from 'vue';
 import { useMapRoute } from './useMapRoute';
 
 const API_KEY = import.meta.env.VITE_XROUTEN_API_KEY;
-const SERVICE_ID = 'ac2c110d-541d-43a3-b3f2-064dc73b0e57';
+const SERVICE_ID = 'c1880e18-dc90-47d2-a991-bc1080fd07a1';
 
 export interface Location {
   lng: number;
@@ -16,7 +16,7 @@ export interface DriverData {
     address: string;
     location: Location;
   };
-  remainingStops: Location[];
+  remainingStops: number;
   destination: {
     address: string;
     location: Location;
@@ -25,22 +25,16 @@ export interface DriverData {
   isDelivered: boolean;
 }
 
-// Hier dann später die daten Fetchen
 const driverData = ref<DriverData>({
   orderId: 'SH-2025-00421',
   driver: {
     address: 'Lade Adresse...',
-    location: { lng: 13.397634, lat: 52.523432 },
+    location: { lng: 0, lat: 0 },
   },
-  remainingStops: [
-    { lng: 13.404954, lat: 52.520008 },
-    { lng: 13.38886, lat: 52.517037 },
-    { lng: 13.377704, lat: 52.516275 },
-    { lng: 13.342533, lat: 52.513364 },
-  ],
+  remainingStops: 0,
   destination: {
     address: 'Lade Adresse...',
-    location: { lng: 13.295779, lat: 52.520639 },
+    location: { lng: 0, lat: 0 },
     eta: '14:30 Uhr',
   },
   isDelivered: false,
@@ -48,8 +42,24 @@ const driverData = ref<DriverData>({
 
 export function useTrackingData() {
   const { centerOnPoint, getAddressFromCoords } = useMapRoute();
+  let intervalId: ReturnType<typeof setInterval> | null = null;
 
-  const stopps = computed(() => driverData.value.remainingStops.length);
+  const startTracking = () => {
+    intervalId = setInterval(() => {
+      fetchXroutenStatus();
+    }, 10000);
+  };
+  const stopTracking = () => {
+    if (intervalId) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+  };
+  onUnmounted(() => {
+    stopTracking();
+  });
+
+  const stopps = computed(() => driverData.value.remainingStops);
 
   const timelineItems = computed(() => {
     const items = [];
@@ -94,6 +104,48 @@ export function useTrackingData() {
     centerOnPoint(location);
   };
 
+  const fetchXroutenStatus = async () => {
+    const url = `/api-xrouten/api/service-locations/${SERVICE_ID}/status`;
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          Authorization: `ApiKey ${API_KEY}`,
+          Accept: 'application/json',
+        },
+      });
+
+      if (!response.ok) throw new Error(`HTTP-Fehler: ${response.status}`);
+
+      const jsonData = await response.json();
+
+      if (jsonData.driverLocation.coordinates) {
+        const [lng, lat] = jsonData.driverLocation.coordinates;
+        driverData.value.driver.location = {
+          lng: parseFloat(lng),
+          lat: parseFloat(lat),
+        };
+      }
+      if (jsonData.remainingStops) {
+        driverData.value.remainingStops = jsonData.remainingStops.length;
+      }
+      if (jsonData.destination.coordinates) {
+        const [lng, lat] = jsonData.destination.coordinates;
+        driverData.value.destination.location = {
+          lng: parseFloat(lng),
+          lat: parseFloat(lat),
+        };
+      }
+
+      await updateAddressFromCoords();
+      console.log(jsonData);
+      return jsonData;
+    } catch (error) {
+      console.error('Tracking Update fehlgeschlagen:', error);
+    }
+  };
+
   const updateAddressFromCoords = async () => {
     driverData.value.driver.address = await getAddressFromCoords(
       driverData.value.driver.location
@@ -104,38 +156,10 @@ export function useTrackingData() {
   };
   return {
     driverData,
+    timelineItems,
     updateAddressFromCoords,
     handleCenterMap,
-    timelineItems,
+    fetchXroutenStatus,
+    startTracking,
   };
 }
-
-async function fetchXroutenStatus(serviceId: string, apiKey: string) {
-  const url = `/api-xrouten/api/service-locations/${serviceId}/status`;
-
-  try {
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        Authorization: `ApiKey ${apiKey}`,
-        Accept: 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP-Fehler: ${response.status}`);
-    }
-
-    const jsonData = await response.json();
-    console.log('Daten von api.xrouten.de erfolgreich geladen:', jsonData);
-    return jsonData;
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      console.error('Fehler beim Laden der Daten:', error.message);
-    } else {
-      console.error('Unbekannter Fehler beim Laden der Daten');
-    }
-  }
-}
-
-fetchXroutenStatus(SERVICE_ID, API_KEY);
