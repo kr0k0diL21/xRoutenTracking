@@ -14,15 +14,15 @@ export function useMapRoute() {
   mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
   // Funktion zum Einrichten der Karte mit der Route
-  async function setupMapWithRoute(
+  async function setupMap(
     start: Location,
     destination: Location,
-    isDelivered: boolean
+    driverStatus: string
   ) {
     // Neue Karte erstellen und an das Div mit der ID 'map' binden
     const mapInstance = new mapboxgl.Map({
       container: 'map',
-      style: 'mapbox://styles/mapbox/standard',
+      style: 'mapbox://styles/mapbox/streets-v12',
       center: [start.lng, start.lat],
       zoom: 2,
     });
@@ -53,34 +53,19 @@ export function useMapRoute() {
           console.warn('No route geometry found in API response.');
           return;
         }
-
-        // 2. Datenquelle (Source) definieren
-        mapInstance.addSource('route-source', {
-          type: 'geojson',
-          data: routeGeometry,
-        });
-        if (!isDelivered) {
-          // 3. Grafische Ebene (Layer) für die Linie hinzufügen
-          mapInstance.addLayer({
-            id: 'route-layer',
-            type: 'line',
-            source: 'route-source',
-            layout: { 'line-join': 'round', 'line-cap': 'round' },
-            paint: {
-              'line-color': '#f97316',
-              'line-width': 5,
-              'line-opacity': 0.9,
-            },
-          });
-          if (!driverMarker.value && !isDelivered) {
-            driverMarker.value = new mapboxgl.Marker({
-              element: createMarkerElement('/start.png', 50),
-              anchor: 'center',
-            })
-              .setLngLat(waypoints[0].location)
-              .addTo(mapInstance);
-          }
+        if (driverStatus !== 'pending' && driverMarker.value) {
+          driverMarker.value.remove();
+          driverMarker.value = null;
         }
+        if (!driverMarker.value && driverStatus === 'pending') {
+          driverMarker.value = new mapboxgl.Marker({
+            element: createMarkerElement('/start.png', 50),
+            anchor: 'center',
+          })
+            .setLngLat(waypoints[0].location)
+            .addTo(mapInstance);
+        }
+
         if (!destinationMarker.value) {
           destinationMarker.value = new mapboxgl.Marker({
             color: '#f97316',
@@ -90,7 +75,7 @@ export function useMapRoute() {
             .addTo(mapInstance);
         }
 
-        fitMapToRoute(routeGeometry.coordinates, mapInstance, isDelivered);
+        fitMapToRoute(routeGeometry.coordinates, mapInstance, driverStatus);
       } catch (error) {
         console.error('Error during map route setup:', error);
       }
@@ -125,9 +110,9 @@ export function useMapRoute() {
   function fitMapToRoute(
     coordinates: [number, number][],
     mapInstance: mapboxgl.Map,
-    isDelivered: boolean
+    driverStatus: string
   ) {
-    if (isDelivered) {
+    if (driverStatus !== 'pending') {
       const destination = coordinates[coordinates.length - 1];
       mapInstance.flyTo({
         center: destination,
@@ -181,27 +166,21 @@ export function useMapRoute() {
     }
   }
   // Funktion zum Aktualisieren der Route und des Fahrer-Markers
-  async function updateRouteAndMarker(
+  async function updateMarker(
     newDriverLocation: Location,
     destination: Location
   ) {
-    const mapInstance = map.value;
     const data = await fetchRouteData(newDriverLocation, destination);
     const waypoints = data.waypoints;
-    const routeGeometry = data.routes?.[0]?.geometry;
+
     if (driverMarker.value) {
       driverMarker.value.setLngLat(waypoints[0].location);
     }
-    if (mapInstance && routeGeometry) {
-      (mapInstance.getSource('route-source') as mapboxgl.GeoJSONSource).setData(
-        routeGeometry
-      );
-    }
   }
   return {
-    setupMapWithRoute,
+    setupMap,
     centerOnPoint,
     getAddressFromCoords,
-    updateRouteAndMarker,
+    updateMarker,
   };
 }

@@ -1,9 +1,9 @@
 // src/composables/useTrackingData.ts
-import { ref, computed, onUnmounted } from 'vue';
+import { ref, computed } from 'vue';
 import { useMapRoute } from './useMapRoute';
 
 const API_KEY = import.meta.env.VITE_XROUTEN_API_KEY;
-const SERVICE_ID = 'c1880e18-dc90-47d2-a991-bc1080fd07a1';
+const SERVICE_ID = '839d629a-7223-4712-be28-80d4ef300009';
 
 export interface Location {
   lng: number;
@@ -22,7 +22,7 @@ export interface DriverData {
     location: Location;
     eta: string;
   };
-  isDelivered: boolean;
+  status: string;
 }
 
 const driverData = ref<DriverData>({
@@ -37,35 +37,19 @@ const driverData = ref<DriverData>({
     location: { lng: 0, lat: 0 },
     eta: '14:30 Uhr',
   },
-  isDelivered: false,
+  status: '',
 });
 
 export function useTrackingData() {
   const { centerOnPoint, getAddressFromCoords } = useMapRoute();
-  let intervalId: ReturnType<typeof setInterval> | null = null;
-
-  const startTracking = () => {
-    intervalId = setInterval(() => {
-      fetchXroutenStatus();
-    }, 10000);
-  };
-  const stopTracking = () => {
-    if (intervalId) {
-      clearInterval(intervalId);
-      intervalId = null;
-    }
-  };
-  onUnmounted(() => {
-    stopTracking();
-  });
-
+  const isLoading = ref(false);
   const stopps = computed(() => driverData.value.remainingStops);
 
   const timelineItems = computed(() => {
     const items = [];
-    const subtitleStopps = ['Auf dem Weg', 'Fast da'];
+    const status = driverData.value.status;
 
-    if (!driverData.value.isDelivered) {
+    if (status === 'pending') {
       items.push(
         {
           type: 'driver',
@@ -78,19 +62,21 @@ export function useTrackingData() {
             stopps.value <= 0
               ? 'Sie sind der nächste Halt'
               : 'Verbleibende Stopps: ' + stopps.value,
-          subtitle: stopps.value > 1 ? subtitleStopps[0] : subtitleStopps[1],
+          subtitle: stopps.value > 1 ? 'Auf dem Weg' : 'Fast da',
         }
       );
     }
+    let statusPrefix = 'Ankunft ca. ';
+    if (status === 'completed') statusPrefix = 'Abgeschlossen um ';
+    if (status === 'failed') statusPrefix = 'Zustellung fehlgeschlagen ';
+    if (status === 'unknown') statusPrefix = 'Status aktuell unbekannt ';
 
     items.push({
       type: 'destination',
       title: 'Ziel',
       subtitle: driverData.value.destination.address,
       eta: driverData.value.destination.eta,
-      status: driverData.value.isDelivered
-        ? 'Abgeschlossen um '
-        : 'Ankunft ca. ',
+      status: statusPrefix,
     });
 
     return items;
@@ -105,6 +91,7 @@ export function useTrackingData() {
   };
 
   const fetchXroutenStatus = async () => {
+    isLoading.value = true;
     const url = `/api-xrouten/api/service-locations/${SERVICE_ID}/status`;
 
     try {
@@ -136,13 +123,17 @@ export function useTrackingData() {
           lng: parseFloat(lng),
           lat: parseFloat(lat),
         };
+        if (jsonData.status) driverData.value.status = jsonData.status;
       }
 
       await updateAddressFromCoords();
       console.log(jsonData);
+      console.log(JSON.parse(JSON.stringify(driverData.value)));
       return jsonData;
     } catch (error) {
       console.error('Tracking Update fehlgeschlagen:', error);
+    } finally {
+      isLoading.value = false;
     }
   };
 
@@ -150,16 +141,19 @@ export function useTrackingData() {
     driverData.value.driver.address = await getAddressFromCoords(
       driverData.value.driver.location
     );
-    driverData.value.destination.address = await getAddressFromCoords(
-      driverData.value.destination.location
-    );
+
+    if (driverData.value.destination.address === 'Lade Adresse...') {
+      driverData.value.destination.address = await getAddressFromCoords(
+        driverData.value.destination.location
+      );
+    }
   };
   return {
     driverData,
     timelineItems,
+    isLoading,
     updateAddressFromCoords,
     handleCenterMap,
     fetchXroutenStatus,
-    startTracking,
   };
 }

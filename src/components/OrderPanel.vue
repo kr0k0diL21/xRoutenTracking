@@ -1,13 +1,57 @@
 <!-- OrderPanel -->
 <script setup lang="ts">
+import { computed } from 'vue';
 import MapIcon from '@/assets/icons/MapIcon.vue';
+import ReloadButton from '@/assets/icons/ReloadButton.vue';
 import ChevronRight from '@/assets/icons/ChevronRight.vue';
-import ChevronUpDown from '@/assets/icons/ChevronUpDown.vue';
 import { useTrackingData } from '@/composables/useTrackingData';
 
 const isOpen = defineModel<boolean>({ default: false });
 const isMobile = window.innerWidth < 768;
-const { driverData, timelineItems, handleCenterMap } = useTrackingData();
+const {
+  driverData,
+  timelineItems,
+  isLoading,
+  handleCenterMap,
+  fetchXroutenStatus,
+} = useTrackingData();
+
+const manualRefresh = async () => {
+  if (isLoading.value || driverData.value.status !== 'pending') return;
+  await fetchXroutenStatus();
+};
+
+const statusConfig = {
+  pending: {
+    label: 'Unterwegs',
+    badge:
+      'bg-blue-100 text-blue-800 ring-blue-200 hover:bg-blue-200 cursor-pointer',
+    dot: 'bg-blue-500',
+    text: 'text-blue-800',
+  },
+  completed: {
+    label: 'Erledigt',
+    badge: 'bg-green-100 text-green-800 ring-green-200 cursor-default',
+    dot: 'bg-green-500',
+    text: 'text-green-800',
+  },
+  failed: {
+    label: 'Fehlgeschlagen',
+    badge: 'bg-red-100 text-red-800 ring-red-200 cursor-default',
+    dot: 'bg-red-500',
+    text: 'text-red-800',
+  },
+  unknown: {
+    label: 'Unbekannt',
+    badge: 'bg-gray-100 text-gray-800 ring-gray-200 cursor-default',
+    dot: 'bg-gray-500',
+    text: 'text-gray-800',
+  },
+};
+const currentStatus = computed(() => {
+  const s = driverData.value.status as keyof typeof statusConfig;
+  return statusConfig[s] || statusConfig.unknown;
+});
 </script>
 
 <template>
@@ -24,7 +68,7 @@ const { driverData, timelineItems, handleCenterMap } = useTrackingData();
         {{ driverData.orderId }}
       </div>
       <div class="text-sm text-gray-600 mt-1 flex items-center gap-2">
-        <template v-if="!driverData.isDelivered">
+        <template v-if="driverData.status === 'pending'">
           <span class="truncate">{{ driverData.driver.address }}</span>
           <ChevronRight />
         </template>
@@ -33,21 +77,30 @@ const { driverData, timelineItems, handleCenterMap } = useTrackingData();
     </div>
 
     <div
-      class="inline-flex items-center rounded-full mb-5 px-3.5 py-1.5 text-xs font-bold ring-1"
-      :class="
-        driverData.isDelivered
-          ? 'bg-green-100 text-green-800 ring-green-200'
-          : 'bg-blue-100 text-blue-800 ring-blue-200'
-      "
+      class="inline-flex items-center rounded-full mb-5 px-3.5 py-1.5 text-xs font-bold ring-1 transition-all"
+      :class="currentStatus.badge"
+      @click.stop="manualRefresh"
     >
+      <ReloadButton
+        v-if="driverData.status === 'pending'"
+        class="w-3.5 h-3.5 mr-2"
+        :class="{
+          'animate-spin': isLoading,
+          'animate-pulse': !isLoading,
+        }"
+      />
       <span
-        class="w-2 h-2 rounded-full mr-2 animate-pulse"
-        :class="driverData.isDelivered ? 'bg-green-500' : ' bg-blue-500'"
+        v-else
+        class="w-2 h-2 rounded-full mr-2"
+        :class="[
+          currentStatus.dot,
+          { 'animate-pulse': driverData.status === 'completed' },
+        ]"
       ></span>
-      {{ driverData.isDelivered ? 'Erledigt' : 'Unterwegs' }}
+      {{ currentStatus.label }}
     </div>
-    <ChevronUpDown :isOpen="isOpen" />
   </button>
+
   <!-- Ausklappbarer Inhalt -->
   <div
     class="grid transition-[grid-template-rows] duration-500 ease-in-out"
@@ -84,7 +137,7 @@ const { driverData, timelineItems, handleCenterMap } = useTrackingData();
                 v-else-if="item.type === 'destination'"
                 class="w-5 h-5 rounded-full ring-4"
                 :class="
-                  driverData.isDelivered
+                  driverData.status === 'completed'
                     ? 'bg-orange-500 ring-white'
                     : 'bg-white ring-gray-300'
                 "
@@ -104,11 +157,17 @@ const { driverData, timelineItems, handleCenterMap } = useTrackingData();
               <p
                 v-if="item.eta"
                 class="text-xs font-semibold mt-1"
-                :class="
-                  driverData.isDelivered ? 'text-green-800' : 'text-blue-800'
-                "
+                :class="currentStatus.text"
               >
-                {{ item.status + item.eta }}
+                {{ item.status }}
+                <template
+                  v-if="
+                    driverData.status === 'pending' ||
+                    driverData.status === 'completed'
+                  "
+                >
+                  {{ item.eta }}
+                </template>
               </p>
             </div>
 
@@ -126,12 +185,11 @@ const { driverData, timelineItems, handleCenterMap } = useTrackingData();
       <!-- Footer Fahrerkontakt -->
       <div class="m-7 flex justify-between items-center text-left">
         <div class="text-sm text-gray-600">
-          <p>
-            <span class="font-medium">Fragen?</span>
-          </p>
+          <p class="font-medium">Fragen zur Lieferung?</p>
+          <p class="text-xs text-gray-400">Unser Support ist für Sie da.</p>
         </div>
         <button
-          class="bg-orange-500 text-white px-5 py-2 rounded-lg hover:bg-orange-600 transition text-sm font-medium"
+          class="bg-orange-500 text-white px-5 py-2 rounded-lg hover:bg-orange-600 transition text-sm font-medium shadow-sm active:scale-95"
         >
           Kontaktieren
         </button>
