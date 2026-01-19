@@ -5,6 +5,7 @@ import MapIcon from '@/assets/icons/MapIcon.vue';
 import ReloadButton from '@/assets/icons/ReloadButton.vue';
 import ChevronRight from '@/assets/icons/ChevronRight.vue';
 import { useTrackingData } from '@/composables/useTrackingData';
+import { useMap } from '@/composables/useMap';
 
 const isOpen = defineModel<boolean>({ default: false });
 const isMobile = window.innerWidth < 768;
@@ -16,9 +17,15 @@ const {
   fetchXroutenStatus,
 } = useTrackingData();
 
+const { updateDriver } = useMap();
 const manualRefresh = async () => {
   if (isLoading.value || driverData.value.status !== 'pending') return;
   await fetchXroutenStatus();
+  await updateDriver(
+    driverData.value.driver.location,
+    driverData.value.destination.location,
+    driverData.value.status
+  );
 };
 
 const statusConfig = {
@@ -186,12 +193,11 @@ const currentStatus = computed(() => {
       <div class="m-7 flex justify-between items-center text-left">
         <div class="text-sm text-gray-600">
           <p class="font-medium">Fragen zur Lieferung?</p>
-          <p class="text-xs text-gray-400">Unser Support ist für Sie da.</p>
         </div>
         <button
           class="bg-orange-500 text-white px-5 py-2 rounded-lg hover:bg-orange-600 transition text-sm font-medium shadow-sm active:scale-95"
         >
-          Kontaktieren
+          Kontakt
         </button>
       </div>
     </div>

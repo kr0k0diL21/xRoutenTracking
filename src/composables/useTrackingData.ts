@@ -1,16 +1,16 @@
 // src/composables/useTrackingData.ts
 import { ref, computed } from 'vue';
-import { useMapRoute } from './useMapRoute';
+import { useMap } from './useMap';
 
 const API_KEY = import.meta.env.VITE_XROUTEN_API_KEY;
-const SERVICE_ID = '839d629a-7223-4712-be28-80d4ef300009';
+const SERVICE_ID = '69dc5122-e7e3-44e9-aecc-6faf0efd9288';
 
-export interface Location {
+interface Location {
   lng: number;
   lat: number;
 }
 
-export interface DriverData {
+interface DriverData {
   orderId: string;
   driver: {
     address: string;
@@ -41,13 +41,14 @@ const driverData = ref<DriverData>({
 });
 
 export function useTrackingData() {
-  const { centerOnPoint, getAddressFromCoords } = useMapRoute();
+  const { centerOnPoint, getAddressFromCoords } = useMap();
   const isLoading = ref(false);
   const stopps = computed(() => driverData.value.remainingStops);
 
   const timelineItems = computed(() => {
     const items = [];
     const status = driverData.value.status;
+    let statusPrefix = 'Ankunft ca. ';
 
     if (status === 'pending') {
       items.push(
@@ -66,7 +67,7 @@ export function useTrackingData() {
         }
       );
     }
-    let statusPrefix = 'Ankunft ca. ';
+
     if (status === 'completed') statusPrefix = 'Abgeschlossen um ';
     if (status === 'failed') statusPrefix = 'Zustellung fehlgeschlagen ';
     if (status === 'unknown') statusPrefix = 'Status aktuell unbekannt ';
@@ -123,9 +124,8 @@ export function useTrackingData() {
           lng: parseFloat(lng),
           lat: parseFloat(lat),
         };
-        if (jsonData.status) driverData.value.status = jsonData.status;
       }
-
+      if (jsonData.status) driverData.value.status = jsonData.status;
       await updateAddressFromCoords();
       console.log(jsonData);
       console.log(JSON.parse(JSON.stringify(driverData.value)));
@@ -141,7 +141,7 @@ export function useTrackingData() {
     driverData.value.driver.address = await getAddressFromCoords(
       driverData.value.driver.location
     );
-
+    console.log(driverData.value.driver.address);
     if (driverData.value.destination.address === 'Lade Adresse...') {
       driverData.value.destination.address = await getAddressFromCoords(
         driverData.value.destination.location

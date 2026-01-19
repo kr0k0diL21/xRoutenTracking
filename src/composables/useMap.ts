@@ -9,13 +9,23 @@ interface Location {
 const map = shallowRef<mapboxgl.Map | null>(null);
 const driverMarker = shallowRef<mapboxgl.Marker | null>(null);
 const destinationMarker = shallowRef<mapboxgl.Marker | null>(null);
+const mapLoaded = (mapInstance: mapboxgl.Map) =>
+  new Promise((resolve) => {
+    if (mapInstance.isStyleLoaded()) {
+      resolve(true);
+    } else {
+      mapInstance.once('load', () => {
+        resolve(true);
+      });
+    }
+  });
 
-export function useMapRoute() {
+export function useMap() {
   mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
   // Funktion zum Einrichten der Karte mit der Route
   async function setupMap(
-    start: Location,
+    driver: Location,
     destination: Location,
     driverStatus: string
   ) {
@@ -23,63 +33,48 @@ export function useMapRoute() {
     const mapInstance = new mapboxgl.Map({
       container: 'map',
       style: 'mapbox://styles/mapbox/streets-v12',
-      center: [start.lng, start.lat],
+      center: [driver.lng, driver.lat],
       zoom: 2,
     });
 
-    mapInstance.addControl(
-      new mapboxgl.NavigationControl({ showCompass: true }),
-      'top-right'
-    );
-    mapInstance.addControl(
-      new mapboxgl.GeolocateControl({
-        positionOptions: { enableHighAccuracy: true },
-        trackUserLocation: true,
-        showUserLocation: true,
-      }),
-      'top-right'
-    );
+    mapInstance.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    mapInstance.addControl(new mapboxgl.GeolocateControl(), 'top-right');
     map.value = mapInstance;
 
     // Warten bis der Kartenstil geladen ist, bevor Daten hinzugefügt werden
-    mapInstance.on('load', async () => {
-      try {
-        // 1. Daten laden
-        const data = await fetchRouteData(start, destination);
-        const routeGeometry = data.routes?.[0]?.geometry;
-        const waypoints = data.waypoints;
-        // Falls keine Route gefunden wurde, Vorgang abbrechen
-        if (!routeGeometry) {
-          console.warn('No route geometry found in API response.');
-          return;
-        }
-        if (driverStatus !== 'pending' && driverMarker.value) {
-          driverMarker.value.remove();
-          driverMarker.value = null;
-        }
-        if (!driverMarker.value && driverStatus === 'pending') {
-          driverMarker.value = new mapboxgl.Marker({
-            element: createMarkerElement('/start.png', 50),
-            anchor: 'center',
-          })
-            .setLngLat(waypoints[0].location)
-            .addTo(mapInstance);
-        }
-
-        if (!destinationMarker.value) {
-          destinationMarker.value = new mapboxgl.Marker({
-            color: '#f97316',
-            anchor: 'center',
-          })
-            .setLngLat(waypoints[1].location)
-            .addTo(mapInstance);
-        }
-
-        fitMapToRoute(routeGeometry.coordinates, mapInstance, driverStatus);
-      } catch (error) {
-        console.error('Error during map route setup:', error);
+    try {
+      await mapLoaded(mapInstance);
+      // 1. Daten laden
+      const data = await fetchRouteData(driver, destination);
+      const routeGeometry = data.routes?.[0].geometry;
+      const waypoints = data.waypoints;
+      if (!routeGeometry) {
+        console.warn('No route geometry found in API response.');
+        return;
       }
-    });
+
+      if (!driverMarker.value && driverStatus === 'pending') {
+        driverMarker.value = new mapboxgl.Marker({
+          element: createMarkerElement('/driver.png', 50),
+          anchor: 'center',
+        })
+          .setLngLat(waypoints[0].location)
+          .addTo(mapInstance);
+      }
+
+      if (!destinationMarker.value) {
+        destinationMarker.value = new mapboxgl.Marker({
+          color: '#f97316',
+          anchor: 'center',
+        })
+          .setLngLat(destination)
+          .addTo(mapInstance);
+      }
+
+      fitMapToMarkers(routeGeometry.coordinates, mapInstance, driverStatus);
+    } catch (error) {
+      console.error('Error during map route setup:', error);
+    }
   }
   //Hilfsfunktion: Erzeugt ein HTML-Bildelement für benutzerdefinierte Marker
   function createMarkerElement(
@@ -97,6 +92,7 @@ export function useMapRoute() {
     // Koordinaten für die URL im Format 'lng,lat;lng,lat' aufbereiten
     const coordinates = `${driver.lng},${driver.lat};${destination.lng},${destination.lat}`;
     const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${coordinates}?geometries=geojson&overview=full&access_token=${mapboxgl.accessToken}`;
+
     const response = await fetch(url);
     // Fehlerprüfung: Falls der Server nicht mit 200 OK antwortet
     if (!response.ok) {
@@ -107,12 +103,27 @@ export function useMapRoute() {
     return await response.json();
   }
   // Funktion zum Anpassen des Kartenansichtsbereichs an die gesamte Route
-  function fitMapToRoute(
+  function fitMapToMarkers(
     coordinates: [number, number][],
     mapInstance: mapboxgl.Map,
     driverStatus: string
   ) {
-    if (driverStatus !== 'pending') {
+    if (driverStatus === 'pending') {
+      const bounds = new LngLatBounds();
+      // Alle Koordinatenpunkte der Route in das Bounds-Objekt einschließen
+      coordinates.forEach((coordinate) => {
+        bounds.extend(coordinate);
+      });
+      const isMobile = window.innerWidth < 768;
+      // Karte auf die berechneten Grenzen ausrichten (mit Puffer am Rand)
+      mapInstance.fitBounds(bounds, {
+        padding: isMobile
+          ? { top: 80, bottom: 450, left: 40, right: 40 } // Viel Platz unten für das Panel
+          : { top: 100, bottom: 100, left: 450, right: 100 },
+        duration: 2800, // Zeit für die Kamerafahrt in Millisekunden
+        maxZoom: 12,
+      });
+    } else {
       const destination = coordinates[coordinates.length - 1];
       mapInstance.flyTo({
         center: destination,
@@ -120,22 +131,7 @@ export function useMapRoute() {
         duration: 2000,
         essential: true,
       });
-      return;
     }
-    const bounds = new LngLatBounds();
-    // Alle Koordinatenpunkte der Route in das Bounds-Objekt einschließen
-    coordinates.forEach((coordinate) => {
-      bounds.extend(coordinate);
-    });
-    const isMobile = window.innerWidth < 768;
-    // Karte auf die berechneten Grenzen ausrichten (mit Puffer am Rand)
-    mapInstance.fitBounds(bounds, {
-      padding: isMobile
-        ? { top: 80, bottom: 450, left: 40, right: 40 } // Viel Platz unten für das Panel
-        : { top: 100, bottom: 100, left: 450, right: 100 },
-      duration: 2800, // Zeit für die Kamerafahrt in Millisekunden
-      maxZoom: 12,
-    });
   }
   // Funktion zum Zentrieren der Karte auf einen bestimmten Punkt
   function centerOnPoint(location: Location) {
@@ -149,7 +145,7 @@ export function useMapRoute() {
     }
   }
   // Funktion zum Abrufen der Adresse anhand von Koordinaten
-  async function getAddressFromCoords(location: Location): Promise<string> {
+  async function getAddressFromCoords(location: Location) {
     const url = `https://api.mapbox.com/search/geocode/v6/reverse?longitude=${location.lng}&latitude=${location.lat}&access_token=${mapboxgl.accessToken}`;
 
     try {
@@ -158,29 +154,43 @@ export function useMapRoute() {
 
       // Mapbox v6 liefert die Adresse in 'features[0].properties.full_address'
       return (
-        data.features?.[0]?.properties?.full_address || 'Adresse nicht gefunden'
+        data.features?.[0].properties.full_address || 'Adresse nicht gefunden'
       );
     } catch (error) {
       console.error('Geocoding Fehler:', error);
       return 'Fehler bei der Adresssuche';
     }
   }
-  // Funktion zum Aktualisieren der Route und des Fahrer-Markers
-  async function updateMarker(
+  // Funktion zum Aktualisieren des Fahrer-Markers
+  async function updateDriver(
     newDriverLocation: Location,
-    destination: Location
+    destination: Location,
+    driverStatus: string
   ) {
-    const data = await fetchRouteData(newDriverLocation, destination);
-    const waypoints = data.waypoints;
+    // 1. Wenn der Status nicht 'pending' ist, Marker sofort entfernen und Funktion beenden
+    if (driverStatus !== 'pending') {
+      driverMarker.value?.remove();
+      driverMarker.value = null;
+      centerOnPoint(destination);
+      return;
+    }
 
-    if (driverMarker.value) {
-      driverMarker.value.setLngLat(waypoints[0].location);
+    try {
+      const data = await fetchRouteData(newDriverLocation, destination);
+      const waypoints = data.waypoints;
+
+      if (driverMarker.value) {
+        driverMarker.value.setLngLat(waypoints[0].location);
+      }
+    } catch (error) {
+      console.error('Fehler beim Update des Markers:', error);
     }
   }
+
   return {
     setupMap,
     centerOnPoint,
     getAddressFromCoords,
-    updateMarker,
+    updateDriver,
   };
 }
