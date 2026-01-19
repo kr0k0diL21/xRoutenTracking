@@ -3,7 +3,7 @@ import { ref, computed } from 'vue';
 import { useMap } from './useMap';
 
 const API_KEY = import.meta.env.VITE_XROUTEN_API_KEY;
-const SERVICE_ID = '69dc5122-e7e3-44e9-aecc-6faf0efd9288';
+const SERVICE_ID = '31796831-75d7-44bf-bc03-d02e9382fff2';
 
 interface Location {
   lng: number;
@@ -11,8 +11,7 @@ interface Location {
 }
 
 interface DriverData {
-  orderId: string;
-  driver: {
+   driver: {
     address: string;
     location: Location;
   };
@@ -26,7 +25,6 @@ interface DriverData {
 }
 
 const driverData = ref<DriverData>({
-  orderId: 'SH-2025-00421',
   driver: {
     address: 'Lade Adresse...',
     location: { lng: 0, lat: 0 },

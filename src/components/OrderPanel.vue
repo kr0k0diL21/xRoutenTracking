@@ -3,7 +3,6 @@
 import { computed } from 'vue';
 import MapIcon from '@/assets/icons/MapIcon.vue';
 import ReloadButton from '@/assets/icons/ReloadButton.vue';
-import ChevronRight from '@/assets/icons/ChevronRight.vue';
 import { useTrackingData } from '@/composables/useTrackingData';
 import { useMap } from '@/composables/useMap';
 
@@ -65,36 +64,22 @@ const currentStatus = computed(() => {
   <!-- Header -->
   <button
     @click="isOpen = !isOpen"
-    class="w-full p-6 text-left flex items-center gap-4 transition-colors"
+    class="w-full p-6 text-left flex justify-between items-center transition-colors"
     :class="isMobile ? '' : 'hover:bg-orange-50/50'"
   >
-    <div class="flex-1 min-w-0">
-      <div
-        class="text-xl font-bold text-gray-900 tracking-tight wrap-break-word"
-      >
-        {{ driverData.orderId }}
-      </div>
-      <div class="text-sm text-gray-600 mt-1 flex items-center gap-2">
-        <template v-if="driverData.status === 'pending'">
-          <span class="truncate">{{ driverData.driver.address }}</span>
-          <ChevronRight />
-        </template>
-        <span class="truncate">{{ driverData.destination.address }}</span>
-      </div>
+    <div>
+      <p class="text-2xl font-black text-gray-900 leading-none">Lieferstatus</p>
     </div>
 
     <div
-      class="inline-flex items-center rounded-full mb-5 px-3.5 py-1.5 text-xs font-bold ring-1 transition-all"
+      class="inline-flex items-center rounded-full px-3.5 py-1.5 text-xm font-bold ring-1 transition-all"
       :class="currentStatus.badge"
       @click.stop="manualRefresh"
     >
       <ReloadButton
         v-if="driverData.status === 'pending'"
         class="w-3.5 h-3.5 mr-2"
-        :class="{
-          'animate-spin': isLoading,
-          'animate-pulse': !isLoading,
-        }"
+        :class="{ 'animate-spin': isLoading, 'animate-pulse': !isLoading }"
       />
       <span
         v-else
@@ -190,7 +175,7 @@ const currentStatus = computed(() => {
         </div>
       </div>
       <!-- Footer Fahrerkontakt -->
-      <div class="m-7 flex justify-between items-center text-left">
+      <div class="p-6 flex justify-between items-center text-left">
         <div class="text-sm text-gray-600">
           <p class="font-medium">Fragen zur Lieferung?</p>
         </div>
