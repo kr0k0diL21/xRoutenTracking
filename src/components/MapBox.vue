@@ -9,7 +9,6 @@ const { driverData, fetchXroutenStatus } = useTrackingData();
 
 onMounted(async () => {
   await fetchXroutenStatus();
-
   setupMap(
     driverData.value.driver.location,
     driverData.value.destination.location,

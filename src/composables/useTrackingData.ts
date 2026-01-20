@@ -3,15 +3,18 @@ import { ref, computed } from 'vue';
 import { useMap } from './useMap';
 
 const API_KEY = import.meta.env.VITE_XROUTEN_API_KEY;
-const SERVICE_ID = '31796831-75d7-44bf-bc03-d02e9382fff2';
+const SERVICE_ID = '741258d4-b0cb-4005-b4bc-eecd6ee33f49';
 
 interface Location {
   lng: number;
   lat: number;
 }
+interface Stop {
+  coordinates: [string, string];
+}
 
 interface DriverData {
-   driver: {
+  driver: {
     address: string;
     location: Location;
   };
@@ -33,15 +36,14 @@ const driverData = ref<DriverData>({
   destination: {
     address: 'Lade Adresse...',
     location: { lng: 0, lat: 0 },
-    eta: '14:30 Uhr',
+    eta: '',
   },
   status: '',
 });
 
 export function useTrackingData() {
-  const { centerOnPoint, getAddressFromCoords } = useMap();
+  const { centerOnPoint, getAddressFromCoords, fetchRouteData } = useMap();
   const isLoading = ref(false);
-  const stopps = computed(() => driverData.value.remainingStops);
 
   const timelineItems = computed(() => {
     const items = [];
@@ -58,15 +60,16 @@ export function useTrackingData() {
         {
           type: 'stop',
           title:
-            stopps.value <= 0
+            driverData.value.remainingStops <= 0
               ? 'Sie sind der nächste Halt'
-              : 'Verbleibende Stopps: ' + stopps.value,
-          subtitle: stopps.value > 1 ? 'Auf dem Weg' : 'Fast da',
+              : 'Verbleibende Stopps: ' + driverData.value.remainingStops,
+          subtitle:
+            driverData.value.remainingStops > 1 ? 'Auf dem Weg' : 'Fast da',
         }
       );
     }
 
-    if (status === 'completed') statusPrefix = 'Abgeschlossen um ';
+    if (status === 'completed') statusPrefix = 'Abgeschlossen ';
     if (status === 'failed') statusPrefix = 'Zustellung fehlgeschlagen ';
     if (status === 'unknown') statusPrefix = 'Status aktuell unbekannt ';
 
@@ -80,7 +83,6 @@ export function useTrackingData() {
 
     return items;
   });
-
   const handleCenterMap = (type: 'driver' | 'destination') => {
     const location =
       type === 'driver'
@@ -88,7 +90,27 @@ export function useTrackingData() {
         : driverData.value.destination.location;
     centerOnPoint(location);
   };
+  const formatTime = (isoString: string) => {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    const nowDate = new Date();
 
+    const isToday =
+      date.getDate() === nowDate.getDate() &&
+      date.getMonth() === nowDate.getMonth() &&
+      date.getFullYear() === nowDate.getFullYear();
+
+    const timeString = date.toLocaleTimeString('de-DE', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    if (isToday) {
+      return `Heute, ${timeString} Uhr`;
+    } else {
+      const dateString = date.toLocaleDateString('de-DE');
+      return `${dateString}, ${timeString} Uhr`;
+    }
+  };
   const fetchXroutenStatus = async () => {
     isLoading.value = true;
     const url = `/api-xrouten/api/service-locations/${SERVICE_ID}/status`;
@@ -113,9 +135,7 @@ export function useTrackingData() {
           lat: parseFloat(lat),
         };
       }
-      if (jsonData.remainingStops) {
-        driverData.value.remainingStops = jsonData.remainingStops.length;
-      }
+
       if (jsonData.destination.coordinates) {
         const [lng, lat] = jsonData.destination.coordinates;
         driverData.value.destination.location = {
@@ -124,9 +144,37 @@ export function useTrackingData() {
         };
       }
       if (jsonData.status) driverData.value.status = jsonData.status;
+      if (jsonData.remainingStops) {
+        driverData.value.remainingStops = jsonData.remainingStops.length;
+        const now = new Date();
+        const stopsForMap: Location[] = jsonData.remainingStops.map(
+          (stop: Stop) => {
+            const lng = parseFloat(stop.coordinates[0]);
+            const lat = parseFloat(stop.coordinates[1]);
+            return { lng, lat };
+          }
+        );
+        const routeData = await fetchRouteData(
+          driverData.value.driver.location,
+          driverData.value.destination.location,
+          stopsForMap
+        );
+
+        if (
+          routeData.routes &&
+          routeData.routes.length > 0 &&
+          driverData.value.status === 'pending'
+        ) {
+          const travelTimeSeconds = routeData.routes[0].duration;
+          const bufferSeconds = stopsForMap.length * 10 * 60;
+          now.setSeconds(now.getSeconds() + travelTimeSeconds + bufferSeconds);
+          driverData.value.destination.eta = formatTime(now.toISOString());
+        } else {
+          driverData.value.destination.eta = formatTime(now.toISOString());
+        }
+      }
       await updateAddressFromCoords();
       console.log(jsonData);
-      console.log(JSON.parse(JSON.stringify(driverData.value)));
       return jsonData;
     } catch (error) {
       console.error('Tracking Update fehlgeschlagen:', error);
@@ -134,12 +182,11 @@ export function useTrackingData() {
       isLoading.value = false;
     }
   };
-
   const updateAddressFromCoords = async () => {
     driverData.value.driver.address = await getAddressFromCoords(
       driverData.value.driver.location
     );
-    console.log(driverData.value.driver.address);
+
     if (driverData.value.destination.address === 'Lade Adresse...') {
       driverData.value.destination.address = await getAddressFromCoords(
         driverData.value.destination.location

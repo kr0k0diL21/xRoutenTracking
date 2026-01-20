@@ -88,10 +88,20 @@ export function useMap() {
     return element;
   }
   //API-Aufruf: Abrufen der Routengeometrie von den Mapbox Directions Servern
-  async function fetchRouteData(driver: Location, destination: Location) {
-    // Koordinaten für die URL im Format 'lng,lat;lng,lat' aufbereiten
-    const coordinates = `${driver.lng},${driver.lat};${destination.lng},${destination.lat}`;
-    const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${coordinates}?geometries=geojson&overview=full&access_token=${mapboxgl.accessToken}`;
+  async function fetchRouteData(
+    driver: Location,
+    destination: Location,
+    stops: Location[] = []
+  ) {
+    const coordParts: string[] = [];
+    coordParts.push(`${driver.lng}, ${driver.lat}`);
+    stops.forEach((stop) => {
+      coordParts.push(`${stop.lng},${stop.lat}`);
+    });
+    coordParts.push(`${destination.lng},${destination.lat}`);
+    const allCoordinatesString = coordParts.join(';');
+
+    const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${allCoordinatesString}?geometries=geojson&overview=full&access_token=${mapboxgl.accessToken}`;
 
     const response = await fetch(url);
     // Fehlerprüfung: Falls der Server nicht mit 200 OK antwortet
@@ -192,5 +202,6 @@ export function useMap() {
     centerOnPoint,
     getAddressFromCoords,
     updateDriver,
+    fetchRouteData,
   };
 }
