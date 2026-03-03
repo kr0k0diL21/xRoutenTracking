@@ -12,10 +12,13 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  build: {
+    chunkSizeWarningLimit: 2000,
+  },
   server: {
     https: {
       key: fs.readFileSync('localhost-key.pem'),
-      cert: fs.readFileSync('localhost.pem')
+      cert: fs.readFileSync('localhost.pem'),
     },
     host: true,
     port: 3000,
@@ -31,4 +34,3 @@ export default defineConfig({
     },
   },
 });
-

@@ -196,4 +196,3 @@ function manuelRefresh() {
     </div>
   </div>
 </template>
-
