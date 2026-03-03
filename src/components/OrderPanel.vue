@@ -1,63 +1,58 @@
-<!-- OrderPanel -->
+<!-- src/components/OrderPanel.vue -->
 <script setup lang="ts">
 import { computed } from 'vue';
 import MapIcon from '@/assets/icons/MapIcon.vue';
 import ReloadButton from '@/assets/icons/ReloadButton.vue';
-import { useTrackingData } from '@/composables/useTrackingData';
-import { useMap } from '@/composables/useMap';
+import { statusConfig, getStatusConfig } from '@/utils/orderPanelUtils';
+import type { xRoutenTrackingData } from '@/types/trackingDataTypes';
+import { useMapboxData } from '@/composables/useMapboxData';
 
+const { flyToLocation } = useMapboxData();
 const isOpen = defineModel<boolean>({ default: false });
-const isMobile = window.innerWidth < 768;
-const {
-  driverData,
-  timelineItems,
-  isLoading,
-  handleCenterMap,
-  fetchXroutenStatus,
-} = useTrackingData();
+const props = defineProps<{
+  trackingData: xRoutenTrackingData | null;
+  isMobile: boolean;
+  isLoading: boolean;
+}>();
 
-const { updateDriver } = useMap();
-const manualRefresh = async () => {
-  if (isLoading.value || driverData.value.status !== 'pending') return;
-  await fetchXroutenStatus();
-  await updateDriver(
-    driverData.value.driver.location,
-    driverData.value.destination.location,
-    driverData.value.status
-  );
-};
-
-const statusConfig = {
-  pending: {
-    label: 'Unterwegs',
-    badge:
-      'bg-blue-100 text-blue-800 ring-blue-200 hover:bg-blue-200 cursor-pointer',
-    dot: 'bg-blue-500',
-    text: 'text-blue-800',
-  },
-  completed: {
-    label: 'Erledigt',
-    badge: 'bg-green-100 text-green-800 ring-green-200 cursor-default',
-    dot: 'bg-green-500',
-    text: 'text-green-800',
-  },
-  failed: {
-    label: 'Fehlgeschlagen',
-    badge: 'bg-red-100 text-red-800 ring-red-200 cursor-default',
-    dot: 'bg-red-500',
-    text: 'text-red-800',
-  },
-  unknown: {
-    label: 'Unbekannt',
-    badge: 'bg-gray-100 text-gray-800 ring-gray-200 cursor-default',
-    dot: 'bg-gray-500',
-    text: 'text-gray-800',
-  },
-};
+// Timeline-Daten
 const currentStatus = computed(() => {
-  const s = driverData.value.status as keyof typeof statusConfig;
-  return statusConfig[s] || statusConfig.unknown;
+  if (!props.trackingData) {
+    return statusConfig.loading;
+  }
+  const s = props.trackingData.status;
+  if (s === 'pending') return statusConfig.pending;
+  if (s === 'completed') return statusConfig.completed;
+  if (s === 'failed') return statusConfig.failed;
+  if (s === 'unknown') return statusConfig.unknown;
+
+  return statusConfig.loading;
 });
+
+// Timeline-Logik basierend auf den neuen Props
+const timelineItems = computed(() => {
+  return getStatusConfig(props.trackingData);
+});
+
+// Funktion zum Zentrieren der Karte auf Fahrer oder Ziel
+function handleCenterMap(type: string) {
+  if (!props.trackingData) return;
+
+  if (type === 'driver') {
+    const start = props.trackingData.start.coordinates;
+    flyToLocation(start);
+  } else if (type === 'destination') {
+    const end = props.trackingData.end.coordinates;
+    flyToLocation(end);
+  }
+}
+
+const emit = defineEmits(['refresh']);
+
+// Manuelle Aktualisierungsfunktion
+function manuelRefresh() {
+  emit('refresh');
+}
 </script>
 
 <template>
@@ -71,13 +66,17 @@ const currentStatus = computed(() => {
       <p class="text-2xl font-black text-gray-900 leading-none">Lieferstatus</p>
     </div>
 
-    <div
+    <button
       class="inline-flex items-center rounded-full px-3.5 py-1.5 text-xm font-bold ring-1 transition-all"
       :class="currentStatus.badge"
-      @click.stop="manualRefresh"
+      @click.stop="manuelRefresh()"
     >
+      <div
+        v-if="props.isMobile"
+        class="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-gray-300 rounded-full"
+      ></div>
       <ReloadButton
-        v-if="driverData.status === 'pending'"
+        v-if="props.trackingData?.status === 'pending'"
         class="w-3.5 h-3.5 mr-2"
         :class="{ 'animate-spin': isLoading, 'animate-pulse': !isLoading }"
       />
@@ -86,11 +85,11 @@ const currentStatus = computed(() => {
         class="w-2 h-2 rounded-full mr-2"
         :class="[
           currentStatus.dot,
-          { 'animate-pulse': driverData.status === 'completed' },
+          { 'animate-pulse': props.trackingData?.status === 'completed' },
         ]"
       ></span>
       {{ currentStatus.label }}
-    </div>
+    </button>
   </button>
 
   <!-- Ausklappbarer Inhalt -->
@@ -129,7 +128,7 @@ const currentStatus = computed(() => {
                 v-else-if="item.type === 'destination'"
                 class="w-5 h-5 rounded-full ring-4"
                 :class="
-                  driverData.status === 'completed'
+                  props.trackingData?.status === 'completed'
                     ? 'bg-orange-500 ring-white'
                     : 'bg-white ring-gray-300'
                 "
@@ -145,20 +144,20 @@ const currentStatus = computed(() => {
               <p class="text-sm font-semibold text-gray-800">
                 {{ item.title }}
               </p>
-              <p class="text-xs text-gray-500">{{ item.subtitle }}</p>
+              <p class="text-xs text-gray-500">{{ item.address }}</p>
               <p
-                v-if="item.eta"
+                v-if="item.timestamp"
                 class="text-xs font-semibold mt-1"
                 :class="currentStatus.text"
               >
                 {{ item.status }}
                 <template
                   v-if="
-                    driverData.status === 'pending' ||
-                    driverData.status === 'completed'
+                    props.trackingData?.status === 'pending' ||
+                    props.trackingData?.status === 'completed'
                   "
                 >
-                  {{ item.eta }}
+                  {{ item.timestamp }}
                 </template>
               </p>
             </div>
@@ -179,12 +178,22 @@ const currentStatus = computed(() => {
         <div class="text-sm text-gray-600">
           <p class="font-medium">Fragen zur Lieferung?</p>
         </div>
-        <button
-          class="bg-orange-500 text-white px-5 py-2 rounded-lg hover:bg-orange-600 transition text-sm font-medium shadow-sm active:scale-95"
-        >
-          Kontakt
-        </button>
+        <div class="flex gap-4">
+          <a
+            href="tel:..."
+            class="flex items-center justify-center py-3.5 px-4 bg-orange-500 rounded-2xl shadow-lg shadow-orange-200"
+          >
+            <img src="/phone.png" class="w-5 h-5" />
+          </a>
+          <a
+            href="mailto:..."
+            class="flex items-center justify-center py-3.5 px-4 bg-orange-500 rounded-2xl shadow-lg shadow-orange-200"
+          >
+            <img src="/mail.png" class="w-5 h-5" />
+          </a>
+        </div>
       </div>
     </div>
   </div>
 </template>
+

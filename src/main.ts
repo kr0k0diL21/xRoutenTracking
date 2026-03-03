@@ -1,5 +1,9 @@
+// src/main.ts
 import { createApp } from 'vue';
-import App from './App.vue';
-import './style.css';
+import App from '@/App.vue';
+import '@/style.css';
+import mapboxgl from 'mapbox-gl';
+
+mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
 createApp(App).mount('#app');
