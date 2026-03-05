@@ -3,7 +3,6 @@ import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import vueDevTools from 'vite-plugin-vue-devtools';
 import tailwindcss from '@tailwindcss/vite';
-import fs from 'node:fs';
 
 export default defineConfig({
   plugins: [vue(), vueDevTools(), tailwindcss()],
@@ -16,10 +15,6 @@ export default defineConfig({
     chunkSizeWarningLimit: 2000,
   },
   server: {
-    https: {
-      key: fs.readFileSync('localhost-key.pem'),
-      cert: fs.readFileSync('localhost.pem'),
-    },
     host: true,
     port: 3000,
     strictPort: true,

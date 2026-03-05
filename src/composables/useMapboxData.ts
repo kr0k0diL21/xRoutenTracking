@@ -57,7 +57,9 @@ export function useMapboxData() {
       const bounds = new mapboxgl.LngLatBounds();
       bounds.extend([start.lng, start.lat]);
       bounds.extend([end.lng, end.lat]);
-      map.value.fitBounds(bounds, { padding: 180 });
+      map.value.fitBounds(bounds, {
+        maxZoom: 14,
+        padding: 180 });
     }
   }
 
