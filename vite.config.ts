@@ -19,13 +19,13 @@ export default defineConfig({
     port: 3000,
     strictPort: true,
 
-    proxy: {
+   /*  proxy: {
       '/api-xrouten': {
         target: 'https://api.xrouten.de',
         changeOrigin: true,
         secure: true, // Xrouten nutzt HTTPS
         rewrite: (path) => path.replace(/^\/api-xrouten/, ''),
       },
-    },
+    }, */
   },
 });

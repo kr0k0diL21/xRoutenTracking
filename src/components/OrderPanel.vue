@@ -57,7 +57,7 @@ function manuelRefresh() {
 
 <template>
   <!-- Header -->
-  <button
+  <div
     @click="isOpen = !isOpen"
     class="w-full p-6 text-left flex justify-between items-center transition-colors"
     :class="isMobile ? '' : 'hover:bg-orange-50/50'"
@@ -90,7 +90,7 @@ function manuelRefresh() {
       ></span>
       {{ currentStatus.label }}
     </button>
-  </button>
+  </div>
 
   <!-- Ausklappbarer Inhalt -->
   <div

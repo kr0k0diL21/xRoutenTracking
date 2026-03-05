@@ -5,7 +5,7 @@ const API_KEY = import.meta.env.VITE_XROUTEN_API_KEY;
 export async function fetchXroutenData() {
   const urlParams = new URLSearchParams(window.location.search);
   const URL_SERVICE_ID = urlParams.get('destination');
-  const url = `/api-xrouten/api/service-locations/${URL_SERVICE_ID}/status`;
+  const url = `https://api.xrouten.de/api-xrouten/api/service-locations/${URL_SERVICE_ID}/status`;
   try {
     const response = await fetch(url, {
       method: 'GET',
