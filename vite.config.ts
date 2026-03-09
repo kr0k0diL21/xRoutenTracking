@@ -23,14 +23,8 @@ export default defineConfig(({ mode }) => {
       port: Number(env.PORT) || 3021,
       strictPort: true,
 
-   /*    proxy: {
-        '/api-xrouten': {
-          target: 'https://api.xrouten.de',
-          changeOrigin: true,
-          secure: true,
-          rewrite: (path) => path.replace(/^\/api-xrouten/, ''),
-        },
-      }, */
+    /*
+     */
 
     },
   };
