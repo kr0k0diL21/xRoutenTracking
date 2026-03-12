@@ -1,5 +1,5 @@
 import { fileURLToPath, URL } from 'node:url';
-import { defineConfig, loadEnv } from 'vite'; // loadEnv hinzugefügt
+import { defineConfig, loadEnv } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import vueDevTools from 'vite-plugin-vue-devtools';
 import tailwindcss from '@tailwindcss/vite';
@@ -23,8 +23,14 @@ export default defineConfig(({ mode }) => {
       port: Number(env.PORT) || 3021,
       strictPort: true,
 
-    /*
-     */
+/*     proxy: {
+        '/api-xrouten': {
+          target: 'https://api.xrouten.de',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api-xrouten/, ''),
+          secure: true,
+        },
+      } */
 
     },
   };

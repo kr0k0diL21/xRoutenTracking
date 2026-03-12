@@ -17,8 +17,8 @@ export async function fetchXroutenData() {
    /* const url = `/api-xrouten/api/service-locations/${destinationId}/status`; */
   try {
     const response = await fetch(url, {
-    /*   method: 'GET',
-        headers: {
+      method: 'GET',
+      /*   headers: {
         Authorization: `ApiKey ${API_KEY}`,
         Accept: 'application/json',
       }, */
