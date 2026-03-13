@@ -25,10 +25,12 @@ export function useXRoutenData() {
             lng: parseFloat(data.driverLocation.coordinates[0]),
             lat: parseFloat(data.driverLocation.coordinates[1]),
           }),
-          timestamp: new Date(data.driverLocation.timestamp).toLocaleTimeString(
-            'de-DE',
-            { hour: '2-digit', minute: '2-digit' }
-          ),
+          timestamp: `${new Date(
+            data.driverLocation.timestamp
+          ).toLocaleTimeString('de-DE', {
+            hour: '2-digit',
+            minute: '2-digit',
+          })} Uhr`,
         },
         end: {
           coordinates: {

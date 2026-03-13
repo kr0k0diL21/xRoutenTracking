@@ -108,7 +108,7 @@ function manuelRefresh() {
       >
         {{
           props.trackingData
-            ? `zuletzt aktualisiert: ${new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`
+            ? `Stand: ${new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr`
             : 'Lade Daten...'
         }}
       </p>
@@ -164,6 +164,21 @@ function manuelRefresh() {
                 {{ item.title }}
               </p>
               <p class="text-xs text-gray-500 mt-0.5">{{ item.address }}</p>
+              <p
+                v-if="item.timestamp"
+                class="text-xs font-semibold mt-1"
+                :class="currentStatus.text"
+              >
+                {{ item.status }}
+                <template
+                  v-if="
+                    props.trackingData?.status === 'pending' ||
+                    props.trackingData?.status === 'completed'
+                  "
+                >
+                  {{ item.timestamp }}
+                </template>
+              </p>
             </div>
 
             <button
