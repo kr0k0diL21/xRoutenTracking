@@ -53,7 +53,11 @@ const emit = defineEmits(['refresh']);
 function manuelRefresh() {
   if (isVisualLoading.value) return;
   isVisualLoading.value = true;
-  emit('refresh');
+  if (props.trackingData?.status === 'pending') {
+    emit('refresh');
+  } else {
+    handleCenterMap('destination');
+  }
   setTimeout(() => {
     isVisualLoading.value = false;
   }, 1000);
