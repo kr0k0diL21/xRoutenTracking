@@ -125,7 +125,6 @@ getTrackingData();
         v-model="isOpen"
         :is-mobile="isMobile"
         :tracking-data="xRoutenTrackingObject"
-        :is-loading="isLoading"
         @refresh="getTrackingData"
       />
     </aside>

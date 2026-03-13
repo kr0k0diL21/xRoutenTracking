@@ -9,10 +9,10 @@ export function useXRoutenData() {
   const xRoutenTrackingObject = ref<xRoutenTrackingData | null>(null);
   const isLoading = ref(true);
   const error = ref<string | null>(null);
-  
+
   async function getTrackingData() {
     isLoading.value = true;
-    error.value = null;
+
     try {
       const data = await fetchXroutenData();
       const parsedData = {
@@ -45,9 +45,9 @@ export function useXRoutenData() {
       };
 
       xRoutenTrackingObject.value = parsedData;
+      error.value = null;
     } catch (err: unknown) {
       error.value = (err as Error).message;
-      xRoutenTrackingObject.value = null;
       console.error((err as Error).message);
     } finally {
       isLoading.value = false;

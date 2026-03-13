@@ -1,6 +1,6 @@
 <!-- src/components/OrderPanel.vue -->
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import MapIcon from '@/assets/icons/MapIcon.vue';
 import ReloadButton from '@/assets/icons/ReloadButton.vue';
 import { statusConfig, getStatusConfig } from '@/utils/orderPanelUtils';
@@ -12,8 +12,8 @@ const isOpen = defineModel<boolean>({ default: false });
 const props = defineProps<{
   trackingData: xRoutenTrackingData | null;
   isMobile: boolean;
-  isLoading: boolean;
 }>();
+const isVisualLoading = ref(false);
 
 // Timeline-Daten
 const currentStatus = computed(() => {
@@ -51,7 +51,12 @@ const emit = defineEmits(['refresh']);
 
 // Manuelle Aktualisierungsfunktion
 function manuelRefresh() {
+  if (isVisualLoading.value) return;
+  isVisualLoading.value = true;
   emit('refresh');
+  setTimeout(() => {
+    isVisualLoading.value = false;
+  }, 1000);
 }
 </script>
 
@@ -59,37 +64,55 @@ function manuelRefresh() {
   <!-- Header -->
   <div
     @click="isOpen = !isOpen"
-    class="w-full p-6 text-left flex justify-between items-center transition-colors"
+    class="w-full p-6 text-left flex justify-between items-start transition-colors"
     :class="isMobile ? '' : 'hover:bg-orange-50/50'"
   >
     <div>
-      <p class="text-2xl font-black text-gray-900 leading-none">Lieferstatus</p>
+      <p class="mt-2 text-2xl font-black text-gray-900 leading-none">
+        Lieferstatus
+      </p>
     </div>
 
-    <button
-      class="inline-flex items-center rounded-full px-3.5 py-1.5 text-xm font-bold ring-1 transition-all"
-      :class="currentStatus.badge"
-      @click.stop="manuelRefresh()"
-    >
-      <div
-        v-if="props.isMobile"
-        class="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-gray-300 rounded-full"
-      ></div>
-      <ReloadButton
-        v-if="props.trackingData?.status === 'pending'"
-        class="w-3.5 h-3.5 mr-2"
-        :class="{ 'animate-spin': isLoading, 'animate-pulse': !isLoading }"
-      />
-      <span
-        v-else
-        class="w-2 h-2 rounded-full mr-2"
-        :class="[
-          currentStatus.dot,
-          { 'animate-pulse': props.trackingData?.status === 'completed' },
-        ]"
-      ></span>
-      {{ currentStatus.label }}
-    </button>
+    <div class="flex flex-col items-end gap-1.5">
+      <button
+        class="inline-flex items-center rounded-full px-3.5 py-1.5 text-xm font-bold ring-1 transition-all"
+        :class="currentStatus.badge"
+        @click.stop="manuelRefresh()"
+      >
+        <div
+          v-if="props.isMobile"
+          class="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-gray-300 rounded-full"
+        ></div>
+
+        <ReloadButton
+          v-if="props.trackingData?.status === 'pending'"
+          class="w-3.5 h-3.5 mr-2"
+          :class="{
+            'animate-spin': isVisualLoading,
+            'animate-pulse': !isVisualLoading,
+          }"
+        />
+        <span
+          v-else
+          class="w-2 h-2 rounded-full mr-2"
+          :class="[
+            currentStatus.dot,
+            { 'animate-pulse': props.trackingData?.status === 'completed' },
+          ]"
+        ></span>
+        {{ currentStatus.label }}
+      </button>
+
+      <p
+        class="text-[8px] uppercase tracking-wider font-bold text-gray-400 mr-1"
+      >
+        {{
+          props.trackingData
+            ? `zuletzt aktualisiert: ${new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`
+            : 'Lade Daten...'
+        }}
+      </p>
+    </div>
   </div>
 
   <!-- Ausklappbarer Inhalt -->
@@ -102,11 +125,6 @@ function manuelRefresh() {
       <div class="mx-6 py-6 border-t border-b border-orange-500/10">
         <!-- Schlichte Timeline -->
         <div class="relative py-1">
-          <!-- Timeline Linie -->
-          <div
-            class="absolute top-2.5 left-2.5 bottom-9 w-0.5 bg-gray-200"
-          ></div>
-
           <!-- Timeline Items -->
           <div
             v-for="(item, index) in timelineItems"
@@ -114,16 +132,18 @@ function manuelRefresh() {
             class="relative"
             :class="{ 'mb-9': index < timelineItems.length - 1 }"
           >
-            <!-- Icon -->
             <div
-              class="absolute top-1 left-[11px] flex items-center justify-center -translate-x-1/2 -translate-y-1/7"
+              v-if="index < timelineItems.length - 1"
+              class="absolute left-2.5 top-0 bottom-[-2.35rem] w-0.5 bg-gray-200"
+            ></div>
+
+            <div
+              class="absolute top-1 left-2.75 flex items-center justify-center -translate-x-1/2 -translate-y-1/7 z-10"
             >
-              <!-- Fahrer Icon -->
               <div
                 v-if="item.type === 'driver'"
                 class="w-5 h-5 rounded-full bg-orange-500 ring-4 ring-white"
               ></div>
-              <!-- Ziel Icon -->
               <div
                 v-else-if="item.type === 'destination'"
                 class="w-5 h-5 rounded-full ring-4"
@@ -133,40 +153,23 @@ function manuelRefresh() {
                     : 'bg-white ring-gray-300'
                 "
               ></div>
-              <!-- Zwischenstopp Icon -->
               <div
                 v-else
                 class="w-3 h-3 rounded-full bg-orange-500 ring-4 ring-white"
               ></div>
             </div>
-            <!-- Text -->
-            <div class="ml-8">
-              <p class="text-sm font-semibold text-gray-800">
+
+            <div class="ml-8 pr-10">
+              <p class="text-sm font-semibold text-gray-800 leading-tight">
                 {{ item.title }}
               </p>
-              <p class="text-xs text-gray-500">{{ item.address }}</p>
-              <p
-                v-if="item.timestamp"
-                class="text-xs font-semibold mt-1"
-                :class="currentStatus.text"
-              >
-                {{ item.status }}
-                <template
-                  v-if="
-                    props.trackingData?.status === 'pending' ||
-                    props.trackingData?.status === 'completed'
-                  "
-                >
-                  {{ item.timestamp }}
-                </template>
-              </p>
+              <p class="text-xs text-gray-500 mt-0.5">{{ item.address }}</p>
             </div>
 
-            <!-- Center Button -->
             <button
               v-if="item.type === 'driver' || item.type === 'destination'"
               @click.stop="handleCenterMap(item.type)"
-              class="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-orange-500 transition-colors p-2 -mr-2"
+              class="absolute right-1 top-3 -translate-y-1/2 text-gray-400 hover:text-orange-500 transition-colors p-2 -mr-2"
             >
               <MapIcon />
             </button>

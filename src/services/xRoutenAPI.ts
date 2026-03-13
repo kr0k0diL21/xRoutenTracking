@@ -6,19 +6,15 @@ const API_URL = import.meta.env.VITE_XROUTEN_API_URL;
 export async function fetchXroutenData() {
   const destinationId = getDestinationId(window.location.search);
 
-  if (!destinationId) {
-    throw new Error('MISSING_DESTINATION_ID');
-  }
-
   if (!isValidUUID(destinationId)) {
     throw new Error('INVALID_UUID');
   }
   const url = `${API_URL}api/service-locations/${destinationId}/status`;
-   /* const url = `/api-xrouten/api/service-locations/${destinationId}/status`; */
+  /* const url = `/api-xrouten/api/service-locations/${destinationId}/status`; */
   try {
     const response = await fetch(url, {
       method: 'GET',
-      /*   headers: {
+     /*  headers: {
         Authorization: `ApiKey ${API_KEY}`,
         Accept: 'application/json',
       }, */
