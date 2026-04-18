@@ -10,11 +10,11 @@ export async function fetchXroutenData() {
     throw new Error('INVALID_UUID');
   }
   const url = `${API_URL}api/service-locations/${destinationId}/status`;
-/*   const url = `/api-xrouten/api/service-locations/${destinationId}/status`; */
+ /*    const url = `/api-xrouten/api/service-locations/${destinationId}/status`; */
   try {
     const response = await fetch(url, {
       method: 'GET',
-  /*     headers: {
+      /*     headers: {
         Authorization: `ApiKey ${API_KEY}`,
         Accept: 'application/json',
       }, */
@@ -36,8 +36,9 @@ export async function fetchXroutenData() {
 
 function isValidUUID(uuid: string | null): uuid is string {
   if (!uuid) return false;
+
   const uuidRegex =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   return uuidRegex.test(uuid);
 }
 export function getDestinationId(search: string): string | null {
