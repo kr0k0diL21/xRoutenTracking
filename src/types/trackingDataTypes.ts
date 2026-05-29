@@ -15,6 +15,6 @@ export interface xRoutenTrackingData {
   };
   remainingStops: number;
   status: string;
+  contactEmail: string | null;
+  contactPhone: string | null;
 }
-
-

@@ -15,6 +15,7 @@ export function useXRoutenData() {
 
     try {
       const data = await fetchXroutenData();
+      console.log(data);
       const parsedData = {
         start: {
           coordinates: {
@@ -44,6 +45,8 @@ export function useXRoutenData() {
         },
         remainingStops: data.remainingStopsCount,
         status: data.status,
+        contactEmail: data.contactEmail,
+        contactPhone: data.contactPhone,
       };
 
       xRoutenTrackingObject.value = parsedData;

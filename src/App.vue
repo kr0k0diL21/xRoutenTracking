@@ -3,7 +3,7 @@
 import { useBreakpoints, breakpointsTailwind } from '@vueuse/core';
 import OrderPanel from '@/components/OrderPanel.vue';
 import MapBox from '@/components/MapBox.vue';
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { useXRoutenData } from '@/composables/useXRoutenData';
 
 const { xRoutenTrackingObject, getTrackingData, isLoading, error } =
@@ -20,7 +20,32 @@ watch(
   { immediate: true }
 );
 
-getTrackingData();
+let intervalId: ReturnType<typeof setInterval> | null = null;
+
+const startPolling = () => {
+  // Sofort einmal laden
+  getTrackingData();
+
+  // Dann alle 5 Minuten
+  intervalId = setInterval(
+    () => {
+      if (!error.value) {
+        getTrackingData();
+      }
+    },
+    5 * 60 * 1000
+  );
+};
+
+onMounted(() => {
+  startPolling();
+});
+
+onUnmounted(() => {
+  if (intervalId) {
+    clearInterval(intervalId);
+  }
+});
 </script>
 
 <template>
@@ -31,23 +56,16 @@ getTrackingData();
       :class="{ 'blur-md grayscale-[0.2] pointer-events-none': error }"
     />
 
-    <header
-      class="fixed left-1/2 -translate-x-1/2 z-20 flex items-center gap-4 select-none"
-    >
-      <div class="flex items-center justify-center gap-1 py-4 px-6">
-        <img
-          src="/logo_dark.png"
-          alt="xRouten"
-          class="h-10 w-10 object-contain"
-        />
-        <h1 class="text-2xl font-black text-gray-900 tracking-tight">
-          xRouten
-        </h1>
-      </div>
+    <header class="fixed left-1/2 -translate-x-1/2 z-20 select-none py-4">
+      <img
+        src="/xrouten-logo.png"
+        alt="xRouten"
+        class="h-12 w-auto object-contain"
+      />
     </header>
 
     <div
-      v-if="error "
+      v-if="error"
       class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/5"
     >
       <aside

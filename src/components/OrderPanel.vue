@@ -202,13 +202,21 @@ function manuelRefresh() {
         </div>
         <div class="flex gap-4">
           <a
-            href="tel:..."
+            :href="
+              props.trackingData?.contactPhone
+                ? `tel:${props.trackingData.contactPhone}`
+                : '#'
+            "
             class="flex items-center justify-center py-3.5 px-4 bg-orange-500 rounded-2xl shadow-lg shadow-orange-200"
           >
             <img src="/phone.png" class="w-5 h-5" />
           </a>
           <a
-            href="mailto:..."
+            :href="
+              props.trackingData?.contactEmail
+                ? `mailto:${props.trackingData.contactEmail}`
+                : '#'
+            "
             class="flex items-center justify-center py-3.5 px-4 bg-orange-500 rounded-2xl shadow-lg shadow-orange-200"
           >
             <img src="/mail.png" class="w-5 h-5" />
