@@ -15,7 +15,6 @@ export function useXRoutenData() {
 
     try {
       const data = await fetchXroutenData();
-      console.log(data);
       const parsedData = {
         start: {
           coordinates: {

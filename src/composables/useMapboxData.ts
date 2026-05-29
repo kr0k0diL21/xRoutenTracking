@@ -58,8 +58,14 @@ export function useMapboxData() {
       bounds.extend([start.lng, start.lat]);
       bounds.extend([end.lng, end.lat]);
       map.value.fitBounds(bounds, {
-        maxZoom: 14,
-        padding: 180 });
+        maxZoom: 12,
+        padding: {
+          top: 80, // oben
+          right: 60, // rechts
+          bottom: 320, // ← hier mehr Abstand (wichtig wegen Panel!)
+          left: 60, // links
+        },
+      });
     }
   }
 
@@ -70,6 +76,13 @@ export function useMapboxData() {
         center: [location.lng, location.lat],
         zoom: 14,
         duration: 2000,
+        padding: {
+          // auch hier Padding für bessere Darstellung
+          top: 80,
+          right: 40,
+          bottom: 280,
+          left: 40,
+        },
       });
     }
   }

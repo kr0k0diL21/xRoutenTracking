@@ -3,6 +3,7 @@
 import { computed, ref } from 'vue';
 import MapIcon from '@/assets/icons/MapIcon.vue';
 import ReloadButton from '@/assets/icons/ReloadButton.vue';
+import ChevronUpDown from '@/assets/icons/ChevronUpDown.vue';
 import { statusConfig, getStatusConfig } from '@/utils/orderPanelUtils';
 import type { xRoutenTrackingData } from '@/types/trackingDataTypes';
 import { useMapboxData } from '@/composables/useMapboxData';
@@ -83,11 +84,6 @@ function manuelRefresh() {
         :class="currentStatus.badge"
         @click.stop="manuelRefresh()"
       >
-        <div
-          v-if="props.isMobile"
-          class="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-gray-300 rounded-full"
-        ></div>
-
         <ReloadButton
           v-if="props.trackingData?.status === 'pending'"
           class="w-3.5 h-3.5 mr-2"
@@ -117,6 +113,11 @@ function manuelRefresh() {
         }}
       </p>
     </div>
+    <ChevronUpDown
+      v-if="props.isMobile"
+      :is-open="isOpen"
+      class="absolute left-1/2 -translate-x-1/2 top-0 text-gray-400 pointer-events-none"
+    />
   </div>
 
   <!-- Ausklappbarer Inhalt -->
