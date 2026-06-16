@@ -1,4 +1,4 @@
-# xRoutenTracking 2.0
+# xRoutenTracking
 
 Eine moderne Web-Anwendung zur Echtzeit-Verfolgung von Routen und Lieferungen. Das Projekt nutzt Vue 3, Vite und Mapbox GL JS, um Lieferstatus und Fahrzeugpositionen auf einer interaktiven Karte darzustellen.
 
@@ -44,7 +44,7 @@ Stelle sicher, dass du [Node.js](https://nodejs.org/) (Version 20.19.0+ oder 22.
 1. **Repository klonen:**
    ```bash
    git clone <repository-url>
-   cd xRoutenTracking2.0
+   cd xRoutenTracking
    ```
 
 2. **Abhängigkeiten installieren:**
