@@ -1,48 +1,112 @@
-# TrackingxRouten
+# xRoutenTracking 2.0
 
-This template should help get you started developing with Vue 3 in Vite.
+Eine moderne Web-Anwendung zur Echtzeit-Verfolgung von Routen und Lieferungen. Das Projekt nutzt Vue 3, Vite und Mapbox GL JS, um Lieferstatus und Fahrzeugpositionen auf einer interaktiven Karte darzustellen.
 
-## Recommended IDE Setup
+## 🚀 Features
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- **Interaktive Karte**: Visualisierung von Start- und Zielpunkten sowie der aktuellen Route mittels Mapbox GL JS.
+- **Echtzeit-Updates**: Automatisches Polling der Tracking-Daten alle 5 Minuten.
+- **Dynamisches UI**: Ein responsives Bestellpanel mit detaillierten Informationen zur Lieferung.
+- **Status-abhängige Navigation**: Automatische Anpassung des Kartenausschnitts (Zoom/Fly-To) basierend auf dem Lieferstatus (`pending`, `delivered`, etc.).
+- **Responsive Design**: Optimierte Darstellung für Desktop und mobile Endgeräte dank Tailwind CSS 4.
+- **Robustes Error-Handling**: Visuelle Rückmeldung bei Ladefehlern oder fehlenden Daten.
 
-## Recommended Browser Setup
+## 📸 Screenshots
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd) 
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+### Finales Design
+Hier ist das Design der Anwendung in verschiedenen Ansichten:
 
-## Type Support for `.vue` Imports in TS
+| Desktop Ansicht | Smartphone (Eingeklappt) | Smartphone (Ausgeklappt) |
+| :---: | :---: | :---: |
+| ![Desktop](public/FinalesDesignDesktop.png) | ![Mobile Compact](public/FinalesDesignSmartphoneEingeklappt.jpg) | ![Mobile Expanded](public/FinalesDesignSmartphoneAusgeklappt.jpg) |
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+### Lieferstatus-Zustände
+Die Anwendung visualisiert verschiedene Zustände der Lieferung:
 
-## Customize configuration
+| Unterwegs | Erledigt | Fehlgeschlagen | Unbekannt |
+| :---: | :---: | :---: | :---: |
+| ![Unterwegs](public/LieferstatusUnterwegs.png) | ![Erledigt](public/LieferstatusErledigt.png) | ![Fehlgeschlagen](public/LieferstatusFehlgeschlagen.png) | ![Unbekannt](public/LieferstatusUnbekannt.png) |
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+## 🛠 Tech Stack
 
-## Project Setup
+- **Framework**: [Vue 3](https://vuejs.org/) (Composition API)
+- **Build Tool**: [Vite](https://vitejs.dev/)
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
+- **Karten-Engine**: [Mapbox GL JS](https://www.mapbox.com/mapbox-gljs)
+- **State Management & Utilities**: [VueUse](https://vueuse.org/)
+- **HTTP Client**: Native [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)
+- **Sprache**: [TypeScript](https://www.typescriptlang.org/)
 
-```sh
-npm install
+## 📦 Installation
+
+Stelle sicher, dass du [Node.js](https://nodejs.org/) (Version 20.19.0+ oder 22.12.0+) installiert hast. Dieses Projekt verwendet `pnpm` als Paketmanager.
+
+1. **Repository klonen:**
+   ```bash
+   git clone <repository-url>
+   cd xRoutenTracking2.0
+   ```
+
+2. **Abhängigkeiten installieren:**
+   ```bash
+   pnpm install
+   ```
+
+3. **Umgebungsvariablen konfigurieren:**
+   Kopiere die Datei `.env.dist` nach `.env` und trage deine API-Schlüssel ein:
+   ```bash
+   cp .env.dist .env
+   ```
+   Erforderliche Variablen:
+   - `VITE_MAPBOX_TOKEN`: Dein Mapbox Access Token.
+   - `VITE_XROUTEN_API_URL`: Die URL zur xRouten API.
+
+## 💻 Entwicklung
+
+Um den Entwicklungsserver zu starten:
+```bash
+pnpm dev
+```
+Die Anwendung ist standardmäßig unter `http://localhost:3021` erreichbar (konfigurierbar in der `.env`).
+
+## 🏗 Build & Deployment
+
+Projekt für die Produktion bauen:
+```bash
+pnpm build
+```
+Die fertigen Dateien befinden sich im `dist/` Verzeichnis.
+
+Vorschau des Production-Builds:
+```bash
+pnpm preview
 ```
 
-### Compile and Hot-Reload for Development
+## 🧪 Qualitätssicherung
 
-```sh
-npm run dev
+- **Linting & Formatting**:
+  ```bash
+  pnpm lint
+  pnpm format
+  ```
+- **Type-Check**:
+  ```bash
+  pnpm type-check
+  ```
+
+## 📂 Projektstruktur (Auszug)
+
+```text
+src/
+├── assets/             # Statische Assets und Icons
+├── components/         # Vue Komponenten (MapBox, OrderPanel)
+├── composables/        # Wiederverwendbare Logik (Mapbox, xRouten Data)
+├── services/           # API-Schnittstellen
+├── types/              # TypeScript Typdefinitionen
+├── utils/              # Hilfsfunktionen
+├── App.vue             # Hauptkomponente
+└── main.ts             # Einstiegspunkt
 ```
 
-### Type-Check, Compile and Minify for Production
-
-```sh
-npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
+---
+Erstellt mit ❤️ für effizientes Routen-Tracking.

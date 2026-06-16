@@ -7,7 +7,12 @@ export async function reverseGeocoding(location: Coordinates) {
   const url = `https://api.mapbox.com/search/geocode/v6/reverse?longitude=${location.lng}&latitude=${location.lat}&access_token=${mapboxgl.accessToken}`;
 
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
     if (!response.ok) {
       throw new Error(
         `Geocoding API responded with status: ${response.status}`
@@ -16,7 +21,7 @@ export async function reverseGeocoding(location: Coordinates) {
     const data = await response.json();
     // Mapbox v6 liefert die Adresse in 'features[0].properties.full_address'
     return (
-      data.features?.[0].properties.full_address || 'Adresse nicht gefunden'
+      data.features?.[0]?.properties?.full_address || 'Adresse nicht gefunden'
     );
   } catch (error) {
     console.error('Geocoding Fehler:', error);

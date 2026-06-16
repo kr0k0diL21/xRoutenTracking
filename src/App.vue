@@ -20,27 +20,21 @@ watch(
   { immediate: true }
 );
 
-let intervalId: ReturnType<typeof setInterval> | null = null;
+let intervalId: number | null = null;
+// Polling-Logik – alle 5 Minuten aktualisieren
+function pollData() {
+  if (!error.value) {
+    getTrackingData();
+  }
+}
+function startPolling() {
+  getTrackingData(); // Sofort einmal laden
 
-const startPolling = () => {
-  // Sofort einmal laden
-  getTrackingData();
-
-  // Dann alle 5 Minuten
-  intervalId = setInterval(
-    () => {
-      if (!error.value) {
-        getTrackingData();
-      }
-    },
-    5 * 60 * 1000
-  );
-};
-
+  intervalId = setInterval(pollData, 5 * 60 * 1000); // alle 5 Minuten
+}
 onMounted(() => {
   startPolling();
 });
-
 onUnmounted(() => {
   if (intervalId) {
     clearInterval(intervalId);
