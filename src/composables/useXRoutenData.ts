@@ -15,6 +15,7 @@ export function useXRoutenData() {
 
     try {
       const data = await fetchXroutenData();
+      console.log('Fetched xRouten data:', data);
       const parsedData = {
         status: data.status,
         remainingStops: data.remainingStopsCount,
@@ -22,12 +23,15 @@ export function useXRoutenData() {
         contactEmail: data.contactEmail,
 
         start: {
-          timestamp: `${new Date(
-            data.driverLocation.timestamp
-          ).toLocaleTimeString('de-DE', {
-            hour: '2-digit',
-            minute: '2-digit',
-          })} Uhr`,
+          timestamp: data.driverLocation?.timestamp
+            ? `${new Date(data.driverLocation.timestamp).toLocaleTimeString(
+                'de-DE',
+                {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                }
+              )} Uhr`
+            : 'keine Angabe',
 
           coordinates: {
             lng: parseFloat(data.driverLocation.coordinates[0]),
