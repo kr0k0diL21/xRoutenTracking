@@ -51,11 +51,17 @@ onUnmounted(() => {
     />
 
     <header class="fixed left-1/2 -translate-x-1/2 z-20 select-none py-4">
-      <img
+      <a
+        href="https://xrouten.de"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-block"
+      ><img
         src="/xrouten-logo.png"
         alt="xRouten"
         class="h-12 w-auto object-contain"
       />
+      </a>
     </header>
 
     <div
@@ -130,7 +136,7 @@ onUnmounted(() => {
 
     <aside
       v-else-if="xRoutenTrackingObject"
-      class="fixed z-40 bg-white/70 backdrop-blur rounded-3xl shadow-2xl border border-orange-500/30 overflow-hidden max-w-sm w-full transform transition-all duration-300"
+      class="fixed z-40 bg-white/70 backdrop-blur rounded-lg shadow-2xl border border-orange-500/30 overflow-hidden max-w-sm w-full transform transition-all duration-300"
       :class="isMobile ? 'bottom-0 left-1/2 -translate-x-1/2' : 'top-25 left-4'"
     >
       <OrderPanel

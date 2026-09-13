@@ -26,7 +26,8 @@
     "vue3-mapbox-gl": "^0.6.8"
   },
   "devDependencies": {
-    "@tsconfig/node24": "^24.0.3",
+    "@tsconfig/node22": "^22.0.6",
+    "@tsconfig/node24": "^24.0.4",
     "@types/node": "^24.10.1",
     "@vitejs/plugin-vue": "^6.0.2",
     "@vue/eslint-config-prettier": "^10.2.0",

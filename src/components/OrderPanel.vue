@@ -16,6 +16,25 @@ const props = defineProps<{
 }>();
 const isVisualLoading = ref(false);
 
+// State für Copy-Feedback
+const copiedField = ref<'phone' | 'email' | null>(null);
+
+async function copyToClipboard(
+  text: string | null | undefined,
+  field: 'phone' | 'email'
+) {
+  if (!text) return;
+  try {
+    await navigator.clipboard.writeText(text);
+    copiedField.value = field;
+    setTimeout(() => {
+      copiedField.value = null;
+    }, 2000);
+  } catch (err) {
+    console.error('Fehler beim Kopieren:', err);
+  }
+}
+
 // Timeline-Daten
 const currentStatus = computed(() => {
   if (!props.trackingData) {
@@ -69,18 +88,18 @@ function manuelRefresh() {
   <!-- Header -->
   <div
     @click="isOpen = !isOpen"
-    class="w-full p-6 text-left flex justify-between items-start transition-colors"
+    class="w-full p-6 text-left flex justify-between items-start transition-colors cursor-pointer"
     :class="isMobile ? '' : 'hover:bg-orange-50/50'"
   >
     <div>
       <p class="mt-2 text-2xl font-black text-gray-900 leading-none">
-        Lieferstatus
+        Status
       </p>
     </div>
 
     <div class="flex flex-col items-end gap-1.5">
       <button
-        class="inline-flex items-center rounded-full px-3.5 py-1.5 text-xm font-bold ring-1 transition-all"
+        class="inline-flex items-center rounded-lg px-3.5 py-1.5 text-xm font-bold ring-1 transition-all"
         :class="currentStatus.badge"
         @click.stop="manuelRefresh()"
       >
@@ -169,21 +188,6 @@ function manuelRefresh() {
                 {{ item.title }}
               </p>
               <p class="text-xs text-gray-500 mt-0.5">{{ item.address }}</p>
-              <p
-                v-if="item.timestamp"
-                class="text-xs font-semibold mt-1"
-                :class="currentStatus.text"
-              >
-                {{ item.status }}
-                <template
-                  v-if="
-                    props.trackingData?.status === 'pending' ||
-                    props.trackingData?.status === 'completed'
-                  "
-                >
-                  {{ item.timestamp }}
-                </template>
-              </p>
             </div>
 
             <button
@@ -196,34 +200,61 @@ function manuelRefresh() {
           </div>
         </div>
       </div>
-      <!-- Footer Fahrerkontakt -->
-      <div class="p-6 flex justify-between items-center text-left">
-        <div class="text-sm text-gray-600">
-          <p class="font-medium">Fragen zur Lieferung?</p>
-        </div>
-        <div class="flex gap-4">
-          <a
-            :href="
-              props.trackingData?.contactPhone
-                ? `tel:${props.trackingData.contactPhone}`
-                : '#'
-            "
-            class="flex items-center justify-center py-3.5 px-4 bg-orange-500 rounded-2xl shadow-lg shadow-orange-200"
-          >
-            <img src="/phone.png" class="w-5 h-5" />
-          </a>
-          <a
-            :href="
-              props.trackingData?.contactEmail
-                ? `mailto:${props.trackingData.contactEmail}`
-                : '#'
-            "
-            class="flex items-center justify-center py-3.5 px-4 bg-orange-500 rounded-2xl shadow-lg shadow-orange-200"
-          >
-            <img src="/mail.png" class="w-5 h-5" />
-          </a>
-        </div>
-      </div>
+
+<!-- Footer Fahrerkontakt (Variante 2: Elegant Border) -->
+<div class="p-6 text-left border-t border-gray-100">
+  <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">
+    Kontakt aufnehmen
+  </p>
+
+  <div class="grid grid-cols-2 gap-2">
+    <!-- Telefon Action -->
+    <div class="relative group flex items-center">
+      <a
+        :href="props.trackingData?.contactPhone ? `tel:${props.trackingData.contactPhone}` : '#'"
+        class="w-full flex items-center justify-center gap-1.5 py-2.5 pl-3 pr-8 rounded-xl bg-white border border-gray-200 hover:border-orange-500/40 hover:bg-orange-50/40 text-gray-800 font-medium text-xs transition-all min-w-0 shadow-xs"
+        :class="{ 'opacity-50 pointer-events-none': !props.trackingData?.contactPhone }"
+      >
+        <svg class="w-3.5 h-3.5 text-orange-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        <span class="truncate">
+          {{ props.trackingData?.contactPhone || 'Keine Nummer' }}
+        </span>
+      </a>
+      <button
+        v-if="props.trackingData?.contactPhone"
+        @click="copyToClipboard(props.trackingData?.contactPhone, 'phone')"
+        class="absolute right-1 p-1.5 rounded-lg text-gray-400 hover:text-orange-600 hover:bg-orange-100/50 transition-all shrink-0"
+        title="Nummer kopieren"
+      >
+        <svg v-if="copiedField === 'phone'" class="w-3.5 h-3.5 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        <svg v-else class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+      </button>
+    </div>
+
+    <!-- E-Mail Action -->
+    <div class="relative group flex items-center">
+      <a
+        :href="props.trackingData?.contactEmail ? `mailto:${props.trackingData.contactEmail}` : '#'"
+        class="w-full flex items-center justify-center gap-1.5 py-2.5 pl-3 pr-8 rounded-xl bg-white border border-gray-200 hover:border-orange-500/40 hover:bg-orange-50/40 text-gray-800 font-medium text-xs transition-all min-w-0 shadow-xs"
+        :class="{ 'opacity-50 pointer-events-none': !props.trackingData?.contactEmail }"
+      >
+        <svg class="w-3.5 h-3.5 text-orange-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+        <span class="truncate">
+          {{ props.trackingData?.contactEmail || 'Keine E-Mail' }}
+        </span>
+      </a>
+      <button
+        v-if="props.trackingData?.contactEmail"
+        @click="copyToClipboard(props.trackingData?.contactEmail, 'email')"
+        class="absolute right-1 p-1.5 rounded-lg text-gray-400 hover:text-orange-600 hover:bg-orange-100/50 transition-all shrink-0"
+        title="E-Mail kopieren"
+      >
+        <svg v-if="copiedField === 'email'" class="w-3.5 h-3.5 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        <svg v-else class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
     </div>
   </div>
 </template>
