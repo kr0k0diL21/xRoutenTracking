@@ -4,11 +4,14 @@ export interface Coordinates {
   lat: number;
 }
 export interface xRoutenTrackingData {
+  // Position des Fahrers. Die API liefert sie nur, solange dieser Halt der
+  // nächste des Fahrers ist; für alle späteren Halte ist sie null.
   start: {
     coordinates: Coordinates;
-    timestamp: string;
     address: string;
-  };
+  } | null;
+  // Geplante Ankunft, oder 'keine Angabe', wenn die API keine liefert.
+  arrival: string;
   end: {
     coordinates: Coordinates;
     address: string;

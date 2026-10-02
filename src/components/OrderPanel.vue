@@ -59,8 +59,8 @@ function handleCenterMap(type: string) {
   if (!props.trackingData) return;
 
   if (type === 'driver') {
-    const start = props.trackingData.start.coordinates;
-    flyToLocation(start);
+    if (!props.trackingData.start) return;
+    flyToLocation(props.trackingData.start.coordinates);
   } else if (type === 'destination') {
     const end = props.trackingData.end.coordinates;
     flyToLocation(end);

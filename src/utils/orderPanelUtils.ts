@@ -57,7 +57,9 @@ export function getStatusConfig(data: xRoutenTrackingData | null) {
       {
         type: 'driver',
         title: 'Fahrer',
-        address: data.start.address,
+        address: data.start
+          ? data.start.address
+          : 'Wird angezeigt, sobald Sie der nächste Halt sind',
       },
       {
         type: 'stop',
@@ -80,7 +82,7 @@ export function getStatusConfig(data: xRoutenTrackingData | null) {
     type: 'destination',
     title: 'Ziel',
     address: data.end.address,
-    timestamp: data.start.timestamp,
+    timestamp: data.arrival,
     status: statusPrefix,
   });
 

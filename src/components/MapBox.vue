@@ -18,13 +18,13 @@ onMounted(async () => {
 watch(() => props.trackingData, (newData) => {
   if (!newData) return;
 
-  const start = newData.start.coordinates;
+  const start = newData.start?.coordinates ?? null;
   const end = newData.end.coordinates;
   const status = newData.status;
 
   setMarkers(start, end);
 
-  if (status === 'pending') {
+  if (status === 'pending' && start) {
     fitMapToBounds(start, end);
   } else {
     removeStartMarker();

@@ -22,17 +22,20 @@ export function useMapboxData() {
   }
 
   // Funktion zum Setzen der Start- und Endmarker auf der Karte
-  function setMarkers(start: Coordinates, end: Coordinates) {
+  function setMarkers(start: Coordinates | null, end: Coordinates) {
     if (!map.value) return;
-    if (!startMarker.value) {
+    if (!start) {
+      removeStartMarker();
+    } else if (!startMarker.value) {
       startMarker.value = new mapboxgl.Marker({
         element: createMarkerElement('/start.png', 50),
         anchor: 'center',
       })
         .setLngLat([start.lng, start.lat])
         .addTo(map.value);
+    } else {
+      startMarker.value.setLngLat([start.lng, start.lat]);
     }
-    startMarker.value.setLngLat([start.lng, start.lat]);
 
     endMarker.value = !endMarker.value
       ? new mapboxgl.Marker({
