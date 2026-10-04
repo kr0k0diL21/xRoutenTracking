@@ -15,7 +15,7 @@ export function useXRoutenData() {
 
     try {
       const data = await fetchXroutenData();
-      console.log('Fetched xRouten data:', data);
+      /* console.log('Fetched xRouten data:', data); */
       const driverCoordinates = data.driverLocation?.coordinates
         ? {
             lng: parseFloat(data.driverLocation.coordinates[0]),

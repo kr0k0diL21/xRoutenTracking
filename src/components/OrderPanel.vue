@@ -149,6 +149,9 @@ function manuelRefresh() {
       <div class="mx-6 py-6 border-t border-b border-orange-500/10">
         <!-- Schlichte Timeline -->
         <div class="relative py-1">
+          <!-- Durchgehende vertikale Linie für die gesamte Timeline -->
+          <div class="absolute left-2.5 top-2 bottom-4 w-0.5 bg-gray-200"></div>
+
           <!-- Timeline Items -->
           <div
             v-for="(item, index) in timelineItems"
@@ -156,10 +159,7 @@ function manuelRefresh() {
             class="relative"
             :class="{ 'mb-9': index < timelineItems.length - 1 }"
           >
-            <div
-              v-if="index < timelineItems.length - 1"
-              class="absolute left-2.5 top-0 bottom-[-2.35rem] w-0.5 bg-gray-200"
-            ></div>
+            <!-- (Der alte <div v-if="index < timelineItems.length - 1"> hier flog komplett raus) -->
 
             <div
               class="absolute top-1 left-2.75 flex items-center justify-center -translate-x-1/2 -translate-y-1/7 z-10"

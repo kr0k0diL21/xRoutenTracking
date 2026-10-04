@@ -63,10 +63,10 @@ export function getStatusConfig(data: xRoutenTrackingData | null) {
       },
       {
         type: 'stop',
-        title:
+       /*  title:
           data.remainingStops <= 0
             ? 'Sie sind der nächste Halt'
-            : 'Verbleibende Stopps: ' + data.remainingStops,
+            : 'Verbleibende Stopps: ' + data.remainingStops, */
         subtitel: data.remainingStops > 1 ? 'Auf dem Weg' : 'Fast da',
       }
     );

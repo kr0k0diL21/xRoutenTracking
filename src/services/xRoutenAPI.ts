@@ -1,6 +1,6 @@
 // src/services/xRoutenAPI.ts
-/* const API_KEY = import.meta.env.VITE_XROUTEN_API_KEY; */
-const API_URL = import.meta.env.VITE_XROUTEN_API_URL;
+const API_KEY = import.meta.env.VITE_XROUTEN_API_KEY;
+/* const API_URL = import.meta.env.VITE_XROUTEN_API_URL; */
 
 // Funktion zum Abrufen des xRoutenData vom Backend
 export async function fetchXroutenData() {
@@ -9,15 +9,15 @@ export async function fetchXroutenData() {
   if (!isValidUUID(destinationId)) {
     throw new Error('INVALID_UUID');
   }
-  const url = `${API_URL}api/service-locations/${destinationId}/status`;
-/*   const url = `/api-xrouten/api/service-locations/${destinationId}/status`;
- */  try {
+ /*  const url = `${API_URL}api/service-locations/${destinationId}/status`; */
+  const url = `/api-xrouten/api/service-locations/${destinationId}/status`;
+  try {
     const response = await fetch(url, {
       method: 'GET',
-      /*       headers: {
+            headers: {
         Authorization: `ApiKey ${API_KEY}`,
         Accept: 'application/json',
-      }, */
+      },
     });
 
     if (!response.ok) {
